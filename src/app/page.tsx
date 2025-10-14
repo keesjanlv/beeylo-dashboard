@@ -32,7 +32,7 @@ import { supabase } from '@/lib/supabase';
 
 
 // Function to generate stats - will be called inside component to use real data
-const generateStats = (activeCount: number, pendingCount: number, closedCount: number, totalCount: number) => [
+const generateStats = (activeCount: number, totalCustomers: number, avgResponseTime: string, satisfactionScore: number) => [
   {
     name: 'Active Conversations',
     value: activeCount.toString(),
@@ -43,31 +43,31 @@ const generateStats = (activeCount: number, pendingCount: number, closedCount: n
     bgColor: 'bg-blue-50'
   },
   {
-    name: 'Pending Chats',
-    value: pendingCount.toString(),
-    change: '+5%',
-    changeType: 'increase',
-    icon: ClockIcon,
-    color: 'text-yellow-600',
-    bgColor: 'bg-yellow-50'
-  },
-  {
-    name: 'Closed Today',
-    value: closedCount.toString(),
+    name: 'Total Customers',
+    value: totalCustomers.toString(),
     change: '+8%',
     changeType: 'increase',
-    icon: CheckCircleIcon,
+    icon: UsersIcon,
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50'
+  },
+  {
+    name: 'Avg Response Time',
+    value: avgResponseTime,
+    change: '-15%',
+    changeType: 'decrease',
+    icon: ClockIcon,
     color: 'text-green-600',
     bgColor: 'bg-green-50'
   },
   {
-    name: 'Total Chats',
-    value: totalCount.toString(),
-    change: '+15%',
+    name: 'Customer Satisfaction',
+    value: `${satisfactionScore}%`,
+    change: '+5%',
     changeType: 'increase',
-    icon: ChatBubbleLeftRightIcon,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-50'
+    icon: HeartIcon,
+    color: 'text-pink-600',
+    bgColor: 'bg-pink-50'
   }
 ];
 
@@ -246,7 +246,7 @@ const funnelCards = [
     bgColor: 'bg-red-50',
     borderColor: 'border-red-200',
     action: 'View Urgent Tickets',
-    link: '/chats?categoryFilter=resolve_now'
+    link: '/chats-supabase'
   },
   {
     id: 'retention',
@@ -258,7 +258,7 @@ const funnelCards = [
     bgColor: 'bg-pink-50',
     borderColor: 'border-pink-200',
     action: 'Save Customers',
-    link: '/chats?categoryFilter=retention'
+    link: '/chats-supabase'
   },
   {
     id: 'upsell',
@@ -270,7 +270,7 @@ const funnelCards = [
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200',
     action: 'Close Deals',
-    link: '/chats?categoryFilter=upsell'
+    link: '/chats-supabase'
   },
   {
     id: 'proactive_updates',
@@ -282,7 +282,7 @@ const funnelCards = [
     bgColor: 'bg-blue-50',
     borderColor: 'border-blue-200',
     action: 'Send Updates',
-    link: '/chats?categoryFilter=proactive_updates'
+    link: '/chats-supabase'
   }
 ];
 
@@ -321,7 +321,7 @@ const weeklyGoal = {
 
 export default function Dashboard() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [showKB, setShowKB] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [reminderForm, setReminderForm] = useState<{ when: string; note: string }>({ when: '', note: '' });
@@ -330,11 +330,13 @@ export default function Dashboard() {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('');
+  const [totalCustomers, setTotalCustomers] = useState<number>(0);
+  const [avgResponseTime, setAvgResponseTime] = useState<string>('0m');
 
   // Fetch real chats using the hook
   const { chats, loading: chatsLoading, error: chatsError } = useChats(companyId || undefined);
 
-  // Fetch user profile and company
+  // Fetch user profile, company, and analytics
   useEffect(() => {
     async function fetchUserProfile() {
       if (!user) return;
@@ -349,6 +351,58 @@ export default function Dashboard() {
         setUserName(profile.name || 'User');
         setCompanyId(profile.company_id);
       }
+
+      // Fetch total customers (Flutter consumers)
+      const { data: customers } = await supabase
+        .from('user_profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_type', 'flutter_consumer');
+
+      if (customers) {
+        setTotalCustomers(customers.length || 0);
+      }
+
+      // Calculate average response time from messages
+      if (profile?.company_id) {
+        const { data: chatsWithMessages } = await supabase
+          .from('chats')
+          .select(`
+            id,
+            created_at,
+            messages!inner(created_at, sender_id)
+          `)
+          .eq('company_id', profile.company_id)
+          .limit(50);
+
+        if (chatsWithMessages && chatsWithMessages.length > 0) {
+          let totalResponseTime = 0;
+          let responseCount = 0;
+
+          chatsWithMessages.forEach((chat: any) => {
+            if (chat.messages && chat.messages.length > 1) {
+              // Calculate time between first customer message and first agent response
+              const messages = chat.messages.sort((a: any, b: any) =>
+                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+              );
+
+              for (let i = 1; i < messages.length; i++) {
+                if (messages[i].sender_id !== messages[0].sender_id) {
+                  const timeDiff = new Date(messages[i].created_at).getTime() -
+                                 new Date(messages[0].created_at).getTime();
+                  totalResponseTime += timeDiff;
+                  responseCount++;
+                  break;
+                }
+              }
+            }
+          });
+
+          if (responseCount > 0) {
+            const avgMinutes = Math.round((totalResponseTime / responseCount) / (1000 * 60));
+            setAvgResponseTime(`${avgMinutes}m`);
+          }
+        }
+      }
     }
 
     fetchUserProfile();
@@ -356,12 +410,24 @@ export default function Dashboard() {
 
   // Calculate real stats from chats
   const activeChatsCount = chats.filter(c => c.status === 'open').length;
-  const pendingChatsCount = chats.filter(c => c.status === 'pending').length;
-  const closedChatsCount = chats.filter(c => c.status === 'closed').length;
-  const totalChatsCount = chats.length;
+
+  // Customer satisfaction mock (can be implemented with post-chat surveys)
+  const customerSatisfaction = 94;
 
   // Generate stats with real data
-  const stats = generateStats(activeChatsCount, pendingChatsCount, closedChatsCount, totalChatsCount);
+  const stats = generateStats(activeChatsCount, totalCustomers, avgResponseTime, customerSatisfaction);
+
+  // Show loading state while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const stickyColors = [
     { name: 'White', class: 'bg-white', border: 'border-gray-200' },
@@ -376,7 +442,7 @@ export default function Dashboard() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.altKey && e.key.toLowerCase() === 'r') {
-        router.push('/chats?resume=last');
+        router.push('/chats-supabase?resume=last');
       }
     };
     window.addEventListener('keydown', handler);
