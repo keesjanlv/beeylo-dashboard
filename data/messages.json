@@ -1,0 +1,285 @@
+[
+  {
+    "id": "msg_demo_001",
+    "conversationId": "conv_demo_ai",
+    "senderId": "cust_demo",
+    "senderType": "customer",
+    "content": "Hi there, I'm writing because I'm extremely frustrated with my recent order #ORD-2024-5678 that I placed on January 10th. First of all, the delivery was supposed to arrive on January 13th but it came 3 days late on January 16th without any notification. When I finally received the package, I discovered that out of the 5 items I ordered, 2 were completely wrong - I ordered a size Medium blue Nike running shirt but received a size Large red Adidas shirt instead, and I ordered black running shorts but got white tennis shorts. The third item, the running shoes, were the correct model but had a manufacturing defect where the left shoe's sole was already separating from the upper part. The fourth item, a water bottle, was damaged with a large crack down the side making it completely unusable. Only the fifth item, a pair of socks, was correct. I've been a loyal customer for over 3 years and have never experienced such poor service. I need immediate assistance to return all the incorrect and damaged items, get refunds processed, and receive the correct items I originally ordered. I also expect some form of compensation for this terrible experience as I needed these items for a marathon I'm training for and now I'm behind on my training schedule. Please prioritize this as I'm considering taking my business elsewhere if this isn't resolved quickly and satisfactorily.",
+    "timestamp": "2024-01-16T09:15:00Z",
+    "attachments": [
+      {
+        "type": "image",
+        "url": "/attachments/wrong_items.jpg",
+        "name": "wrong_items.jpg"
+      },
+      {
+        "type": "image", 
+        "url": "/attachments/defective_shoe.jpg",
+        "name": "defective_shoe.jpg"
+      },
+      {
+        "type": "image",
+        "url": "/attachments/damaged_bottle.jpg", 
+        "name": "damaged_bottle.jpg"
+      }
+    ]
+  },
+  {
+    "id": "msg_001",
+    "conversationId": "conv_001",
+    "senderId": "cust_001",
+    "senderType": "customer",
+    "content": "Hi, I bought these running shoes 2 weeks ago and the sole is already separating. This is really disappointing for a $150 pair of shoes.",
+    "timestamp": "2024-01-15T14:15:00Z",
+    "attachments": [
+      {
+        "type": "image",
+        "url": "/attachments/shoe_defect_1.jpg",
+        "name": "shoe_defect_1.jpg"
+      }
+    ]
+  },
+  {
+    "id": "msg_002",
+    "conversationId": "conv_001",
+    "senderId": "2",
+    "senderType": "agent",
+    "content": "I'm so sorry to hear about this issue with your running shoes, Alex. That's definitely not the quality we expect from our products. I can see from the photo that this is clearly a manufacturing defect.",
+    "timestamp": "2024-01-15T14:18:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_003",
+    "conversationId": "conv_001",
+    "senderId": "cust_001",
+    "senderType": "customer",
+    "content": "The sole is separating after just 2 weeks of use",
+    "timestamp": "2024-01-15T14:30:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_004",
+    "conversationId": "conv_002",
+    "senderId": "cust_002",
+    "senderType": "customer",
+    "content": "Hi! I'm setting up a home gym in my small apartment and need some advice on equipment that won't take up too much space but still gives me a good workout.",
+    "timestamp": "2024-01-15T13:30:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_005",
+    "conversationId": "conv_002",
+    "senderId": "3",
+    "senderType": "agent",
+    "content": "Hello Jessica! I'd be happy to help you create an efficient home gym setup. Can you tell me what your main fitness goals are and roughly how much space you're working with?",
+    "timestamp": "2024-01-15T13:35:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_006",
+    "conversationId": "conv_002",
+    "senderId": "cust_002",
+    "senderType": "customer",
+    "content": "Looking for equipment recommendations for a small apartment",
+    "timestamp": "2024-01-15T13:45:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_007",
+    "conversationId": "conv_003",
+    "senderId": "cust_003",
+    "senderType": "customer",
+    "content": "Hello, I placed an order last week and the tracking shows it's delayed. Can you give me an update on when I might receive it?",
+    "timestamp": "2024-01-15T10:15:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_008",
+    "conversationId": "conv_003",
+    "senderId": "1",
+    "senderType": "agent",
+    "content": "Hi Robert! I've checked your order and I can see there was a delay at our distribution center. Your package is now in transit and should arrive by Thursday. I'll send you an updated tracking number.",
+    "timestamp": "2024-01-15T10:25:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_009",
+    "conversationId": "conv_003",
+    "senderId": "cust_003",
+    "senderType": "customer",
+    "content": "Thank you for the update! Looking forward to receiving it.",
+    "timestamp": "2024-01-15T12:20:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_010",
+    "conversationId": "conv_004",
+    "senderId": "cust_004",
+    "senderType": "customer",
+    "content": "I received the 4-person tent I ordered, but I realized I actually need a 6-person tent for my family. Can I exchange it?",
+    "timestamp": "2024-01-15T14:40:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_011",
+    "conversationId": "conv_004",
+    "senderId": "cust_004",
+    "senderType": "customer",
+    "content": "I need to return this 4-person tent and get a 6-person instead",
+    "timestamp": "2024-01-15T14:45:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_012",
+    "conversationId": "conv_005",
+    "senderId": "cust_005",
+    "senderType": "customer",
+    "content": "Hi, I'm the coach for a youth soccer team and need to order equipment for 25 players. Can you help me with bulk pricing?",
+    "timestamp": "2024-01-15T14:00:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_013",
+    "conversationId": "conv_005",
+    "senderId": "5",
+    "senderType": "agent",
+    "content": "Absolutely! We offer great team discounts for bulk orders. What specific items do you need for your team?",
+    "timestamp": "2024-01-15T14:05:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_014",
+    "conversationId": "conv_005",
+    "senderId": "cust_005",
+    "senderType": "customer",
+    "content": "Need 25 soccer jerseys and 25 pairs of cleats for youth team",
+    "timestamp": "2024-01-15T14:20:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_015",
+    "conversationId": "conv_008",
+    "senderId": "cust_008",
+    "senderType": "customer",
+    "content": "I bought a fitness tracker last month and it was working fine, but now it won't sync with my phone app. I've tried restarting both devices.",
+    "timestamp": "2024-01-15T14:25:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_016",
+    "conversationId": "conv_008",
+    "senderId": "2",
+    "senderType": "agent",
+    "content": "I understand how frustrating that must be, Linda. Let's troubleshoot this step by step. First, can you tell me what phone model you're using and which version of our app you have installed?",
+    "timestamp": "2024-01-15T14:28:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_017",
+    "conversationId": "conv_008",
+    "senderId": "cust_008",
+    "senderType": "customer",
+    "content": "The device won't sync with my phone app",
+    "timestamp": "2024-01-15T14:35:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_demo_002",
+    "conversationId": "conv_demo_ai",
+    "senderId": "agent_sarah",
+    "senderType": "agent",
+    "content": "Hi Emma, I'm so sorry to hear about all these issues with your order. This is absolutely not the experience we want for our valued customers. I've reviewed your order details and I can see this is completely unacceptable.",
+    "timestamp": "2024-01-16T09:25:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_demo_003",
+    "conversationId": "conv_demo_ai",
+    "senderId": "agent_sarah",
+    "senderType": "agent",
+    "content": "I'm immediately processing a full refund for all the incorrect and damaged items, and I'll arrange for expedited shipping of your correct items at no charge. You should receive the refund within 2-3 business days.",
+    "timestamp": "2024-01-16T09:27:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_demo_004",
+    "conversationId": "conv_demo_ai",
+    "senderId": "agent_sarah",
+    "senderType": "agent",
+    "content": "As an apology for this terrible experience, I'm also applying a 25% credit to your account and upgrading you to our VIP customer service tier. I've also flagged this with our quality control team to prevent similar issues.",
+    "timestamp": "2024-01-16T09:30:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_018",
+    "conversationId": "conv_001",
+    "senderId": "agent_mike",
+    "senderType": "agent",
+    "content": "I'd like to arrange a full replacement for you right away. I'm also going to escalate this to our product quality team to investigate this manufacturing issue. You shouldn't have to deal with this kind of defect.",
+    "timestamp": "2024-01-15T14:32:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_019",
+    "conversationId": "conv_001",
+    "senderId": "agent_mike",
+    "senderType": "agent",
+    "content": "I've processed a replacement order for you with expedited shipping - you should receive the new shoes by tomorrow. I've also issued a prepaid return label for the defective pair. No need to pay anything additional.",
+    "timestamp": "2024-01-15T14:35:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_020",
+    "conversationId": "conv_002",
+    "senderId": "agent_jessica",
+    "senderType": "agent",
+    "content": "Based on your space constraints, I'd recommend starting with resistance bands, a yoga mat, and adjustable dumbbells. These give you a full-body workout and store easily. Would you like me to put together a starter package for you?",
+    "timestamp": "2024-01-15T13:50:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_021",
+    "conversationId": "conv_004",
+    "senderId": "agent_tom",
+    "senderType": "agent",
+    "content": "Absolutely! Since the tent is still in new condition, I can arrange an exchange for the 6-person model. The price difference is $45, and I'll send you a prepaid return label for the 4-person tent.",
+    "timestamp": "2024-01-15T14:50:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_022",
+    "conversationId": "conv_004",
+    "senderId": "agent_tom",
+    "senderType": "agent",
+    "content": "I've set up the exchange order for you. Once we receive the 4-person tent back, we'll ship out the 6-person model. The whole process should take about 5-7 business days. Is that timeline okay for your camping trip?",
+    "timestamp": "2024-01-15T14:55:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_023",
+    "conversationId": "conv_005",
+    "senderId": "agent_carlos",
+    "senderType": "agent",
+    "content": "Perfect! For 25 players, I can offer you a 20% team discount. For jerseys, we have youth sizes XS through XL, and for cleats, what age range are we looking at? This helps me recommend the right sizes and styles.",
+    "timestamp": "2024-01-15T14:25:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_024",
+    "conversationId": "conv_008",
+    "senderId": "agent_lisa",
+    "senderType": "agent",
+    "content": "Let's try a few more troubleshooting steps. Can you go to your phone's Bluetooth settings and 'forget' the fitness tracker, then try pairing it again? Also, make sure both devices have the latest software updates.",
+    "timestamp": "2024-01-15T14:40:00Z",
+    "attachments": []
+  },
+  {
+    "id": "msg_025",
+    "conversationId": "conv_008",
+    "senderId": "agent_lisa",
+    "senderType": "agent",
+    "content": "If that doesn't work, we can try a factory reset on the tracker. I'll walk you through it step by step, and if we still can't get it working, I'll arrange a replacement under warranty.",
+    "timestamp": "2024-01-15T14:45:00Z",
+    "attachments": []
+  }
+]

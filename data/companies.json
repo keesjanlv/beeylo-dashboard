@@ -1,0 +1,128 @@
+[
+  {
+    "id": "1",
+    "name": "SportZone Pro",
+    "logo": "/logos/sportzone.svg",
+    "industry": "Multi-Sport Retailer",
+    "size": "Large",
+    "subscription": "Enterprise",
+    "joinedDate": "2023-01-15",
+    "settings": {
+      "workingHours": "9:00-18:00",
+      "timezone": "EST",
+      "autoRespond": true,
+      "aiAssistance": true
+    },
+    "stats": {
+      "totalCustomers": 15420,
+      "monthlyChats": 2840,
+      "avgResponseTime": "2.3 minutes",
+      "satisfaction": 4.6
+    }
+  },
+  {
+    "id": "2",
+    "name": "FitGear Express",
+    "logo": "/logos/fitgear.svg",
+    "industry": "Fitness Equipment",
+    "size": "Medium",
+    "subscription": "Professional",
+    "joinedDate": "2023-03-22",
+    "settings": {
+      "workingHours": "8:00-20:00",
+      "timezone": "PST",
+      "autoRespond": true,
+      "aiAssistance": true
+    },
+    "stats": {
+      "totalCustomers": 8750,
+      "monthlyChats": 1650,
+      "avgResponseTime": "1.8 minutes",
+      "satisfaction": 4.8
+    }
+  },
+  {
+    "id": "3",
+    "name": "OutdoorMax",
+    "logo": "/logos/outdoormax.svg",
+    "industry": "Outdoor & Camping",
+    "size": "Medium",
+    "subscription": "Professional",
+    "joinedDate": "2023-05-10",
+    "settings": {
+      "workingHours": "7:00-19:00",
+      "timezone": "MST",
+      "autoRespond": false,
+      "aiAssistance": true
+    },
+    "stats": {
+      "totalCustomers": 6200,
+      "monthlyChats": 980,
+      "avgResponseTime": "3.1 minutes",
+      "satisfaction": 4.4
+    }
+  },
+  {
+    "id": "4",
+    "name": "AquaSports Central",
+    "logo": "/logos/aquasports.svg",
+    "industry": "Water Sports",
+    "size": "Small",
+    "subscription": "Starter",
+    "joinedDate": "2023-07-18",
+    "settings": {
+      "workingHours": "10:00-17:00",
+      "timezone": "EST",
+      "autoRespond": true,
+      "aiAssistance": false
+    },
+    "stats": {
+      "totalCustomers": 2100,
+      "monthlyChats": 420,
+      "avgResponseTime": "4.2 minutes",
+      "satisfaction": 4.2
+    }
+  },
+  {
+    "id": "5",
+    "name": "TeamSport Supplies",
+    "logo": "/logos/teamsport.svg",
+    "industry": "Team Sports",
+    "size": "Large",
+    "subscription": "Enterprise",
+    "joinedDate": "2022-11-08",
+    "settings": {
+      "workingHours": "6:00-22:00",
+      "timezone": "CST",
+      "autoRespond": true,
+      "aiAssistance": true
+    },
+    "stats": {
+      "totalCustomers": 22100,
+      "monthlyChats": 4200,
+      "avgResponseTime": "1.9 minutes",
+      "satisfaction": 4.7
+    }
+  },
+  {
+    "id": "6",
+    "name": "RunnerWorld",
+    "logo": "/logos/runnerworld.svg",
+    "industry": "Running & Athletics",
+    "size": "Medium",
+    "subscription": "Professional",
+    "joinedDate": "2023-02-14",
+    "settings": {
+      "workingHours": "9:00-18:00",
+      "timezone": "EST",
+      "autoRespond": true,
+      "aiAssistance": true
+    },
+    "stats": {
+      "totalCustomers": 11500,
+      "monthlyChats": 2100,
+      "avgResponseTime": "2.1 minutes",
+      "satisfaction": 4.5
+    }
+  }
+]

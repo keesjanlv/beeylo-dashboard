@@ -1,0 +1,324 @@
+[
+  {
+    "id": "template_001",
+    "name": "Product Return Request",
+    "category": "returns",
+    "description": "Standard template for processing product returns",
+    "fields": [
+      {
+        "id": "order_number",
+        "label": "Order Number",
+        "type": "text",
+        "required": true,
+        "placeholder": "Enter order number"
+      },
+      {
+        "id": "return_reason",
+        "label": "Reason for Return",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Defective product",
+          "Wrong size",
+          "Wrong item",
+          "Not as described",
+          "Changed mind",
+          "Damaged in shipping"
+        ]
+      },
+      {
+        "id": "condition",
+        "label": "Product Condition",
+        "type": "select",
+        "required": true,
+        "options": [
+          "New/Unused",
+          "Lightly used",
+          "Heavily used",
+          "Damaged"
+        ]
+      },
+      {
+        "id": "photos",
+        "label": "Product Photos",
+        "type": "file",
+        "required": false,
+        "accept": "image/*"
+      },
+      {
+        "id": "preferred_resolution",
+        "label": "Preferred Resolution",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Full refund",
+          "Store credit",
+          "Exchange for different size",
+          "Exchange for different product"
+        ]
+      }
+    ],
+    "createdBy": "1",
+    "createdAt": "2024-01-10T10:00:00Z",
+    "usageCount": 45
+  },
+  {
+    "id": "template_002",
+    "name": "Equipment Sizing Guide Request",
+    "category": "product_inquiry",
+    "description": "Help customers find the right size for sports equipment",
+    "fields": [
+      {
+        "id": "product_type",
+        "label": "Product Type",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Athletic shoes",
+          "Protective gear",
+          "Clothing/apparel",
+          "Equipment (bats, rackets, etc.)"
+        ]
+      },
+      {
+        "id": "current_size",
+        "label": "Current Size (if known)",
+        "type": "text",
+        "required": false,
+        "placeholder": "e.g., Size 10, Medium, etc."
+      },
+      {
+        "id": "measurements",
+        "label": "Body Measurements",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "Height, weight, chest, waist, etc."
+      },
+      {
+        "id": "activity_level",
+        "label": "Activity Level",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Recreational",
+          "Regular training",
+          "Competitive",
+          "Professional"
+        ]
+      },
+      {
+        "id": "fit_preference",
+        "label": "Fit Preference",
+        "type": "select",
+        "required": false,
+        "options": [
+          "Tight/Performance fit",
+          "Regular fit",
+          "Loose/Comfortable fit"
+        ]
+      }
+    ],
+    "createdBy": "2",
+    "createdAt": "2024-01-08T14:30:00Z",
+    "usageCount": 78
+  },
+  {
+    "id": "template_003",
+    "name": "Warranty Claim",
+    "category": "warranty",
+    "description": "Process warranty claims for defective products",
+    "fields": [
+      {
+        "id": "purchase_date",
+        "label": "Purchase Date",
+        "type": "date",
+        "required": true
+      },
+      {
+        "id": "product_model",
+        "label": "Product Model/SKU",
+        "type": "text",
+        "required": true,
+        "placeholder": "Enter product model or SKU"
+      },
+      {
+        "id": "issue_description",
+        "label": "Issue Description",
+        "type": "textarea",
+        "required": true,
+        "placeholder": "Describe the problem in detail"
+      },
+      {
+        "id": "usage_frequency",
+        "label": "Usage Frequency",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Daily",
+          "Several times per week",
+          "Weekly",
+          "Occasionally",
+          "Rarely"
+        ]
+      },
+      {
+        "id": "proof_of_purchase",
+        "label": "Proof of Purchase",
+        "type": "file",
+        "required": true,
+        "accept": "image/*,.pdf"
+      },
+      {
+        "id": "damage_photos",
+        "label": "Photos of Damage/Issue",
+        "type": "file",
+        "required": true,
+        "accept": "image/*"
+      }
+    ],
+    "createdBy": "1",
+    "createdAt": "2024-01-05T09:15:00Z",
+    "usageCount": 32
+  },
+  {
+    "id": "template_004",
+    "name": "Team/Bulk Order Inquiry",
+    "category": "sales",
+    "description": "Handle team and bulk order requests",
+    "fields": [
+      {
+        "id": "organization_name",
+        "label": "Organization/Team Name",
+        "type": "text",
+        "required": true,
+        "placeholder": "Enter team or organization name"
+      },
+      {
+        "id": "contact_person",
+        "label": "Contact Person",
+        "type": "text",
+        "required": true,
+        "placeholder": "Coach, manager, or contact name"
+      },
+      {
+        "id": "quantity_needed",
+        "label": "Quantity Needed",
+        "type": "number",
+        "required": true,
+        "placeholder": "Number of items"
+      },
+      {
+        "id": "products_interested",
+        "label": "Products of Interest",
+        "type": "textarea",
+        "required": true,
+        "placeholder": "List the products you're interested in"
+      },
+      {
+        "id": "budget_range",
+        "label": "Budget Range",
+        "type": "select",
+        "required": false,
+        "options": [
+          "Under $500",
+          "$500 - $1,000",
+          "$1,000 - $2,500",
+          "$2,500 - $5,000",
+          "Over $5,000"
+        ]
+      },
+      {
+        "id": "timeline",
+        "label": "When do you need this?",
+        "type": "select",
+        "required": true,
+        "options": [
+          "ASAP",
+          "Within 1 week",
+          "Within 2 weeks",
+          "Within 1 month",
+          "Flexible timing"
+        ]
+      },
+      {
+        "id": "customization",
+        "label": "Customization Needed",
+        "type": "checkbox",
+        "options": [
+          "Team logo/name",
+          "Player names/numbers",
+          "Custom colors",
+          "Special sizing"
+        ]
+      }
+    ],
+    "createdBy": "5",
+    "createdAt": "2024-01-12T16:45:00Z",
+    "usageCount": 23
+  },
+  {
+    "id": "template_005",
+    "name": "Technical Support Request",
+    "category": "technical",
+    "description": "Troubleshoot technical issues with electronic sports equipment",
+    "fields": [
+      {
+        "id": "device_model",
+        "label": "Device Model",
+        "type": "text",
+        "required": true,
+        "placeholder": "Enter device model number"
+      },
+      {
+        "id": "issue_type",
+        "label": "Type of Issue",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Won't turn on",
+          "Connectivity issues",
+          "App sync problems",
+          "Battery issues",
+          "Display problems",
+          "Sensor accuracy",
+          "Other"
+        ]
+      },
+      {
+        "id": "when_started",
+        "label": "When did this issue start?",
+        "type": "select",
+        "required": true,
+        "options": [
+          "Just now",
+          "Today",
+          "This week",
+          "This month",
+          "Longer ago"
+        ]
+      },
+      {
+        "id": "troubleshooting_tried",
+        "label": "Troubleshooting Already Tried",
+        "type": "checkbox",
+        "options": [
+          "Restarted device",
+          "Reinstalled app",
+          "Checked for updates",
+          "Reset to factory settings",
+          "Contacted previous support"
+        ]
+      },
+      {
+        "id": "device_info",
+        "label": "Phone/Device Information",
+        "type": "textarea",
+        "required": false,
+        "placeholder": "Phone model, OS version, app version"
+      }
+    ],
+    "createdBy": "4",
+    "createdAt": "2024-01-07T11:20:00Z",
+    "usageCount": 56
+  }
+]

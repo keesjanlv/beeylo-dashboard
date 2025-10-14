@@ -1,0 +1,107 @@
+[
+  {
+    "id": "1",
+    "name": "Sarah Johnson",
+    "email": "sarah.johnson@sportzone.com",
+    "role": "Customer Service Manager",
+    "avatar": "/avatars/sarah.jpg",
+    "companyId": "1",
+    "status": "online",
+    "permissions": ["manage_team", "view_analytics", "handle_escalations"],
+    "stats": {
+      "chatsHandled": 156,
+      "avgResponseTime": "1.8 minutes",
+      "customerRating": 4.8,
+      "resolutionRate": 94
+    },
+    "workingHours": "9:00-17:00",
+    "timezone": "EST",
+    "maxCases": 15,
+    "currentCases": 8,
+    "expertise": ["retention", "escalations"]
+  },
+  {
+    "id": "2",
+    "name": "Mike Chen",
+    "email": "mike.chen@sportzone.com",
+    "role": "Senior Support Agent",
+    "avatar": "/avatars/mike.jpg",
+    "companyId": "1",
+    "status": "online",
+    "permissions": ["handle_chats", "create_templates"],
+    "stats": {
+      "chatsHandled": 203,
+      "avgResponseTime": "2.1 minutes",
+      "customerRating": 4.6,
+      "resolutionRate": 91
+    },
+    "workingHours": "8:00-16:00",
+    "timezone": "EST",
+    "maxCases": 20,
+    "currentCases": 15,
+    "expertise": ["upsell", "product_inquiry"]
+  },
+  {
+    "id": "3",
+    "name": "Emma Rodriguez",
+    "email": "emma.rodriguez@fitgear.com",
+    "role": "Support Specialist",
+    "avatar": "/avatars/emma.jpg",
+    "companyId": "2",
+    "status": "busy",
+    "permissions": ["handle_chats"],
+    "stats": {
+      "chatsHandled": 178,
+      "avgResponseTime": "1.9 minutes",
+      "customerRating": 4.7,
+      "resolutionRate": 89
+    },
+    "workingHours": "10:00-18:00",
+    "timezone": "PST",
+    "maxCases": 18,
+    "currentCases": 12,
+    "expertise": ["retention", "return_refund"]
+  },
+  {
+    "id": "4",
+    "name": "David Park",
+    "email": "david.park@outdoormax.com",
+    "role": "Technical Support Lead",
+    "avatar": "/avatars/david.jpg",
+    "companyId": "3",
+    "status": "away",
+    "permissions": ["handle_chats", "technical_support", "escalations"],
+    "stats": {
+      "chatsHandled": 134,
+      "avgResponseTime": "2.8 minutes",
+      "customerRating": 4.5,
+      "resolutionRate": 96
+    },
+    "workingHours": "7:00-15:00",
+    "timezone": "MST",
+    "maxCases": 12,
+    "currentCases": 9,
+    "expertise": ["technical_support", "product_issue"]
+  },
+  {
+    "id": "5",
+    "name": "Lisa Thompson",
+    "email": "lisa.thompson@teamsport.com",
+    "role": "Customer Success Manager",
+    "avatar": "/avatars/lisa.jpg",
+    "companyId": "5",
+    "status": "online",
+    "permissions": ["manage_team", "view_analytics", "handle_escalations", "manage_automation"],
+    "stats": {
+      "chatsHandled": 89,
+      "avgResponseTime": "1.5 minutes",
+      "customerRating": 4.9,
+      "resolutionRate": 98
+    },
+    "workingHours": "6:00-14:00",
+    "timezone": "CST",
+    "maxCases": 10,
+    "currentCases": 5,
+    "expertise": ["bulk_order", "upsell"]
+  }
+]

@@ -1,0 +1,157 @@
+{
+  "overview": {
+    "totalConversations": 1247,
+    "activeConversations": 23,
+    "resolvedToday": 89,
+    "averageResponseTime": "2.3 hours",
+    "customerSatisfaction": 4.6,
+    "totalCustomers": 3421,
+    "newCustomersThisMonth": 156
+  },
+  "responseTimeMetrics": {
+    "averageFirstResponse": "1.8 hours",
+    "averageResolutionTime": "4.2 hours",
+    "slaCompliance": 94.2,
+    "trends": [
+      { "date": "2024-01-01", "avgResponse": 2.1, "avgResolution": 4.8 },
+      { "date": "2024-01-02", "avgResponse": 1.9, "avgResolution": 4.1 },
+      { "date": "2024-01-03", "avgResponse": 2.3, "avgResolution": 4.5 },
+      { "date": "2024-01-04", "avgResponse": 1.7, "avgResolution": 3.9 },
+      { "date": "2024-01-05", "avgResponse": 2.0, "avgResolution": 4.2 },
+      { "date": "2024-01-06", "avgResponse": 1.8, "avgResolution": 4.0 },
+      { "date": "2024-01-07", "avgResponse": 2.2, "avgResolution": 4.3 }
+    ]
+  },
+  "conversationVolume": {
+    "daily": [
+      { "date": "2024-01-01", "total": 45, "resolved": 42, "pending": 3 },
+      { "date": "2024-01-02", "total": 52, "resolved": 48, "pending": 4 },
+      { "date": "2024-01-03", "total": 38, "resolved": 35, "pending": 3 },
+      { "date": "2024-01-04", "total": 61, "resolved": 58, "pending": 3 },
+      { "date": "2024-01-05", "total": 47, "resolved": 44, "pending": 3 },
+      { "date": "2024-01-06", "total": 55, "resolved": 51, "pending": 4 },
+      { "date": "2024-01-07", "total": 49, "resolved": 46, "pending": 3 }
+    ],
+    "byCategory": [
+      { "category": "Product Inquiries", "count": 342, "percentage": 27.4 },
+      { "category": "Returns & Exchanges", "count": 298, "percentage": 23.9 },
+      { "category": "Technical Support", "count": 187, "percentage": 15.0 },
+      { "category": "Sizing Help", "count": 156, "percentage": 12.5 },
+      { "category": "Order Status", "count": 134, "percentage": 10.7 },
+      { "category": "Warranty Claims", "count": 89, "percentage": 7.1 },
+      { "category": "Billing Issues", "count": 41, "percentage": 3.3 }
+    ]
+  },
+  "customerSatisfactionTrends": [
+    { "date": "2024-01-01", "rating": 4.5, "responses": 28 },
+    { "date": "2024-01-02", "rating": 4.7, "responses": 31 },
+    { "date": "2024-01-03", "rating": 4.4, "responses": 22 },
+    { "date": "2024-01-04", "rating": 4.8, "responses": 35 },
+    { "date": "2024-01-05", "rating": 4.6, "responses": 29 },
+    { "date": "2024-01-06", "rating": 4.7, "responses": 33 },
+    { "date": "2024-01-07", "rating": 4.5, "responses": 27 }
+  ],
+  "agentPerformance": [
+    {
+      "agentId": "1",
+      "name": "Sarah Johnson",
+      "conversationsHandled": 89,
+      "averageRating": 4.8,
+      "averageResponseTime": "1.2 hours",
+      "resolutionRate": 96.6
+    },
+    {
+      "agentId": "2", 
+      "name": "Mike Chen",
+      "conversationsHandled": 76,
+      "averageRating": 4.7,
+      "averageResponseTime": "1.8 hours",
+      "resolutionRate": 94.7
+    },
+    {
+      "agentId": "3",
+      "name": "Emily Rodriguez",
+      "conversationsHandled": 82,
+      "averageRating": 4.6,
+      "averageResponseTime": "2.1 hours",
+      "resolutionRate": 93.9
+    },
+    {
+      "agentId": "4",
+      "name": "David Kim",
+      "conversationsHandled": 71,
+      "averageRating": 4.5,
+      "averageResponseTime": "2.4 hours",
+      "resolutionRate": 91.5
+    },
+    {
+      "agentId": "5",
+      "name": "Lisa Thompson",
+      "conversationsHandled": 68,
+      "averageRating": 4.4,
+      "averageResponseTime": "2.7 hours",
+      "resolutionRate": 89.7
+    }
+  ],
+  "topProducts": [
+    {
+      "name": "Nike Air Max Running Shoes",
+      "inquiries": 45,
+      "category": "Footwear",
+      "avgRating": 4.7,
+      "commonIssues": ["Sizing", "Color availability", "Return policy"]
+    },
+    {
+      "name": "Wilson Tennis Racket Pro Series",
+      "inquiries": 38,
+      "category": "Equipment",
+      "avgRating": 4.8,
+      "commonIssues": ["String tension", "Grip size", "Warranty"]
+    },
+    {
+      "name": "Under Armour Training Gear Set",
+      "inquiries": 32,
+      "category": "Apparel",
+      "avgRating": 4.5,
+      "commonIssues": ["Size exchange", "Material care", "Bulk orders"]
+    },
+    {
+      "name": "Garmin Fitness Tracker",
+      "inquiries": 29,
+      "category": "Electronics",
+      "avgRating": 4.6,
+      "commonIssues": ["Sync issues", "Battery life", "App compatibility"]
+    },
+    {
+      "name": "Adidas Soccer Cleats",
+      "inquiries": 26,
+      "category": "Footwear", 
+      "avgRating": 4.4,
+      "commonIssues": ["Fit", "Stud configuration", "Durability"]
+    }
+  ],
+  "aiInsights": {
+    "automationRate": 23.4,
+    "suggestionsAccepted": 78.9,
+    "timesSaved": "12.3 hours/day",
+    "topSuggestions": [
+      "Recommend size chart for athletic shoes",
+      "Suggest return policy link for exchanges", 
+      "Provide warranty information for electronics",
+      "Offer bulk discount for team orders",
+      "Share care instructions for technical gear"
+    ]
+  },
+  "peakHours": [
+    { "hour": 9, "volume": 23 },
+    { "hour": 10, "volume": 31 },
+    { "hour": 11, "volume": 28 },
+    { "hour": 12, "volume": 19 },
+    { "hour": 13, "volume": 25 },
+    { "hour": 14, "volume": 34 },
+    { "hour": 15, "volume": 29 },
+    { "hour": 16, "volume": 26 },
+    { "hour": 17, "volume": 22 },
+    { "hour": 18, "volume": 18 }
+  ]
+}

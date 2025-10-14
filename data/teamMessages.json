@@ -1,0 +1,197 @@
+[
+  {
+    "id": "tm_001",
+    "chatId": "team_general",
+    "senderId": "user_1",
+    "senderName": "You",
+    "content": "Good morning team! Hope everyone has a great day ahead! ☀️",
+    "timestamp": "2024-01-16T09:00:00Z",
+    "type": "text"
+  },
+  {
+    "id": "tm_002",
+    "chatId": "team_general",
+    "senderId": "user_2",
+    "senderName": "Sarah Johnson",
+    "content": "Morning! Thanks for the positive energy! 😊",
+    "timestamp": "2024-01-16T09:05:00Z",
+    "type": "text"
+  },
+  {
+    "id": "tm_003",
+    "chatId": "team_general",
+    "senderId": "user_3",
+    "senderName": "Mike Chen",
+    "content": "Hey team, I just handled a complex shipping issue. Customer was frustrated but we managed to turn it around! 🚀",
+    "timestamp": "2024-01-16T10:30:00Z",
+    "type": "text"
+  },
+  {
+    "id": "tm_004",
+    "chatId": "team_general",
+    "senderId": "user_4",
+    "senderName": "Alex Rodriguez",
+    "content": "That's awesome Mike! What was the key to resolving it?",
+    "timestamp": "2024-01-16T10:32:00Z",
+    "type": "text"
+  },
+  {
+    "id": "tm_005",
+    "chatId": "team_general",
+    "senderId": "user_3",
+    "senderName": "Mike Chen",
+    "content": "I used the #expedited-shipping tag and offered a partial refund. Also tagged it as #customer-retention since they were a long-time customer.",
+    "timestamp": "2024-01-16T10:35:00Z",
+    "type": "text",
+    "tags": ["expedited-shipping", "customer-retention"]
+  },
+  {
+    "id": "tm_006",
+    "chatId": "team_general",
+    "senderId": "user_2",
+    "senderName": "Sarah Johnson",
+    "content": "Great approach! I had a similar case yesterday. Used #priority-escalation and #manager-review tags. Customer ended up leaving a 5-star review! ⭐",
+    "timestamp": "2024-01-16T11:00:00Z",
+    "type": "text",
+    "tags": ["priority-escalation", "manager-review"]
+  },
+  {
+    "id": "tm_007",
+    "chatId": "team_general",
+    "senderId": "user_1",
+    "senderName": "You",
+    "content": "You both are crushing it! Sarah, your customer satisfaction scores have been incredible this month! 🏆",
+    "timestamp": "2024-01-16T11:30:00Z",
+    "type": "text"
+  },
+  {
+    "id": "tm_008",
+    "chatId": "team_general",
+    "senderId": "user_4",
+    "senderName": "Alex Rodriguez",
+    "content": "Quick tip for everyone: When dealing with product defects, I always use #quality-assurance and #product-team tags. It helps track patterns and improve our products! 💡",
+    "timestamp": "2024-01-16T12:15:00Z",
+    "type": "text",
+    "tags": ["quality-assurance", "product-team"]
+  },
+  {
+    "id": "tm_009",
+    "chatId": "team_general",
+    "senderId": "user_2",
+    "senderName": "Sarah Johnson",
+    "content": "That's brilliant Alex! I'll start using those tags too. Thanks for sharing! 🙏",
+    "timestamp": "2024-01-16T12:20:00Z",
+    "type": "text"
+  },
+  {
+    "id": "tm_010",
+    "chatId": "team_general",
+    "senderId": "user_3",
+    "senderName": "Mike Chen",
+    "content": "For urgent cases, don't forget the #same-day-resolution tag. It triggers automatic notifications to supervisors. Really helpful for time-sensitive issues! ⚡",
+    "timestamp": "2024-01-16T13:45:00Z",
+    "type": "text",
+    "tags": ["same-day-resolution"]
+  },
+  {
+    "id": "tm_011",
+    "chatId": "team_general",
+    "senderId": "user_1",
+    "senderName": "You",
+    "content": "Love seeing everyone share these best practices! This is exactly how we improve as a team! 💪",
+    "timestamp": "2024-01-16T14:00:00Z",
+    "type": "text"
+  },
+  {
+    "id": "tm_012",
+    "chatId": "team_general",
+    "senderId": "user_4",
+    "senderName": "Alex Rodriguez",
+    "content": "Sarah, I saw you handled that bulk order issue perfectly today. The way you coordinated with logistics was impressive! 👏",
+    "timestamp": "2024-01-16T15:25:00Z",
+    "type": "text"
+  },
+  {
+    "id": "tm_013",
+    "chatId": "team_general",
+    "senderId": "user_2",
+    "senderName": "Sarah Johnson",
+    "content": "Thanks Alex! Used #bulk-order and #logistics-coordination tags. The customer was so happy they placed another order immediately! 🎉",
+    "timestamp": "2024-01-16T15:30:00Z",
+    "type": "text",
+    "tags": ["bulk-order", "logistics-coordination"]
+  },
+  {
+    "id": "ca_001",
+    "chatId": "company_all",
+    "senderId": "user_5",
+    "senderName": "Jennifer Martinez",
+    "content": "Reminder: Quarterly all-hands meeting tomorrow at 2 PM in the main conference room. We'll be discussing Q1 goals and celebrating our achievements! 🎯",
+    "timestamp": "2024-01-16T14:45:00Z",
+    "type": "text"
+  },
+  {
+    "id": "ca_002",
+    "chatId": "company_all",
+    "senderId": "user_6",
+    "senderName": "David Kim",
+    "content": "Excited to share our customer satisfaction improvements! The support team has been doing amazing work! 📈",
+    "timestamp": "2024-01-16T14:50:00Z",
+    "type": "text"
+  },
+  {
+    "id": "dm_001",
+    "chatId": "dm_sarah",
+    "senderId": "user_2",
+    "senderName": "Sarah Johnson",
+    "content": "Hey! Thanks for helping me with that escalated ticket earlier. Your approach with the #escalation-review tag really saved the day!",
+    "timestamp": "2024-01-16T13:20:00Z",
+    "type": "text",
+    "tags": ["escalation-review"]
+  },
+  {
+    "id": "dm_002",
+    "chatId": "dm_sarah",
+    "senderId": "user_1",
+    "senderName": "You",
+    "content": "Anytime! That's what teammates are for. You handled the customer communication perfectly! 😊",
+    "timestamp": "2024-01-16T13:22:00Z",
+    "type": "text"
+  },
+  {
+    "id": "dm_003",
+    "chatId": "dm_mike",
+    "senderId": "user_3",
+    "senderName": "Mike Chen",
+    "content": "Can you review this template I created for handling return requests? I think it could help streamline our process.",
+    "timestamp": "2024-01-16T11:15:00Z",
+    "type": "text"
+  },
+  {
+    "id": "dm_004",
+    "chatId": "dm_mike",
+    "senderId": "user_1",
+    "senderName": "You",
+    "content": "Absolutely! Send it over. I love that you're always thinking about process improvements! 🚀",
+    "timestamp": "2024-01-16T11:18:00Z",
+    "type": "text"
+  },
+  {
+    "id": "dm_005",
+    "chatId": "dm_alex",
+    "senderId": "user_4",
+    "senderName": "Alex Rodriguez",
+    "content": "Good morning! Ready for another productive day? ☀️",
+    "timestamp": "2024-01-16T09:00:00Z",
+    "type": "text"
+  },
+  {
+    "id": "dm_006",
+    "chatId": "dm_alex",
+    "senderId": "user_1",
+    "senderName": "You",
+    "content": "Always! Your positive attitude is contagious. Let's make today great! 💪",
+    "timestamp": "2024-01-16T09:02:00Z",
+    "type": "text"
+  }
+]

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "all_chat",
+    "name": "All chat",
+    "type": "room",
+    "description": "General discussion for all team members",
+    "participants": ["user_1", "user_2", "user_3", "user_4", "user_5", "user_6", "user_7", "user_8"],
+    "lastMessage": "Welcome everyone to the All chat room! 👋",
+    "lastMessageTime": "2024-01-16T16:00:00Z",
+    "unreadCount": 3
+  },
+  {
+    "id": "support_team_alpha",
+    "name": "Support Team Alpha",
+    "type": "room",
+    "description": "Dedicated channel for Support Team Alpha",
+    "participants": ["user_1", "user_2", "user_3", "user_4"],
+    "lastMessage": "Team Alpha, let's tackle today's priority tickets! 💪",
+    "lastMessageTime": "2024-01-16T15:45:00Z",
+    "unreadCount": 1
+  },
+  {
+    "id": "team_general",
+    "name": "Team Support",
+    "type": "team",
+    "description": "Customer Support Team Chat",
+    "participants": ["user_1", "user_2", "user_3", "user_4"],
+    "lastMessage": "Great job on resolving that complex refund case, Sarah! 🎉",
+    "lastMessageTime": "2024-01-16T15:30:00Z",
+    "unreadCount": 2
+  },
+  {
+    "id": "company_all",
+    "name": "All Company",
+    "type": "company",
+    "description": "Company-wide announcements and discussions",
+    "participants": ["user_1", "user_2", "user_3", "user_4", "user_5", "user_6", "user_7", "user_8"],
+    "lastMessage": "Don't forget about the quarterly meeting tomorrow at 2 PM",
+    "lastMessageTime": "2024-01-16T14:45:00Z",
+    "unreadCount": 0
+  },
+  {
+    "id": "dm_sarah",
+    "name": "Sarah Johnson",
+    "type": "direct",
+    "description": "Direct message with Sarah",
+    "participants": ["user_1", "user_2"],
+    "lastMessage": "Thanks for helping me with that escalated ticket!",
+    "lastMessageTime": "2024-01-16T13:20:00Z",
+    "unreadCount": 1
+  },
+  {
+    "id": "dm_mike",
+    "name": "Mike Chen",
+    "type": "direct",
+    "description": "Direct message with Mike",
+    "participants": ["user_1", "user_3"],
+    "lastMessage": "Can you review this template I created?",
+    "lastMessageTime": "2024-01-16T11:15:00Z",
+    "unreadCount": 0
+  },
+  {
+    "id": "dm_alex",
+    "name": "Alex Rodriguez",
+    "type": "direct",
+    "description": "Direct message with Alex",
+    "participants": ["user_1", "user_4"],
+    "lastMessage": "Good morning! Ready for another productive day? ☀️",
+    "lastMessageTime": "2024-01-16T09:00:00Z",
+    "unreadCount": 0
+  }
+]
