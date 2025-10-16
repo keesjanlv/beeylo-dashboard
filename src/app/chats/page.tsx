@@ -27,6 +27,7 @@ interface Message {
     role: 'customer' | 'agent';
   };
   created_at: string;
+  aiSummary?: string;
 }
 
 interface Chat {
@@ -136,6 +137,7 @@ export default function ChatsPage() {
           content: 'Hi there, I\'m writing because I\'m extremely frustrated with multiple issues on my recent order #34521. First, the delivery was 5 days late despite paying for express shipping. Second, when it finally arrived, 2 out of 5 items were damaged with torn packaging. Third, one item was completely missing from the box. I\'ve been a loyal customer for 3 years and have never experienced such poor service. This order was for my daughter\'s birthday party which has already passed. I need this resolved immediately.',
           sender: { name: 'Emma Thompson', role: 'customer' },
           created_at: new Date(Date.now() - 457 * 24 * 3600000).toISOString(),
+          aiSummary: 'Customer experienced 3 issues: (1) 5-day late express delivery, (2) 2/5 items damaged, (3) 1 item missing from order. Order was for daughter\'s birthday (already passed). 3-year loyal customer seeking immediate resolution.',
         },
         {
           id: 'm4b',
@@ -639,40 +641,6 @@ export default function ChatsPage() {
                         </div>
                       ) : (
                         <>
-                          {/* AI Summary Section */}
-                          {selectedChat.isBriefing && selectedChat.briefingSummary && (
-                            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4 mb-4">
-                              <div className="flex items-start gap-2 mb-2">
-                                <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                  </svg>
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="text-xs font-semibold text-purple-900 mb-1">AI Summary</h4>
-                                  <p className="text-xs text-purple-800">{selectedChat.briefingSummary}</p>
-                                </div>
-                              </div>
-
-                              {/* AI Suggestion Pills */}
-                              {selectedChat.aiSuggestions && selectedChat.aiSuggestions.length > 0 && (
-                                <div className="mt-3">
-                                  <p className="text-xs font-medium text-purple-900 mb-2">Suggested Actions:</p>
-                                  <div className="flex flex-wrap gap-2">
-                                    {selectedChat.aiSuggestions.map((suggestion, index) => (
-                                      <button
-                                        key={index}
-                                        className="px-3 py-1.5 bg-white border border-purple-300 rounded-full text-xs text-purple-700 hover:bg-purple-100 hover:border-purple-400 transition-colors"
-                                      >
-                                        {suggestion}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
                           {selectedChat.messages.map((message) => {
                             const isAgent = message.sender.role === 'agent';
 
@@ -698,6 +666,18 @@ export default function ChatsPage() {
                                     </p>
                                   )}
                                   <p className="text-sm">{message.content}</p>
+
+                                  {/* AI Summary inside message */}
+                                  {message.aiSummary && (
+                                    <>
+                                      <div className="border-t border-gray-200 my-3"></div>
+                                      <div className="mt-2">
+                                        <p className="text-xs font-medium text-gray-700 mb-1">AI Summary</p>
+                                        <p className="text-xs text-gray-600">{message.aiSummary}</p>
+                                      </div>
+                                    </>
+                                  )}
+
                                   <p
                                     className={`text-xs mt-1 ${
                                       isAgent ? 'text-blue-100' : 'text-gray-500'
@@ -718,6 +698,22 @@ export default function ChatsPage() {
 
                     {/* Message Input */}
                     <div className="bg-white border-t border-gray-200 p-4 md:p-5 lg:p-6">
+                      {/* AI Suggested Actions */}
+                      {selectedChat.aiSuggestions && selectedChat.aiSuggestions.length > 0 && (
+                        <div className="mb-4">
+                          <div className="flex flex-wrap gap-2">
+                            {selectedChat.aiSuggestions.map((suggestion, index) => (
+                              <button
+                                key={index}
+                                className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded-full text-xs text-gray-700 hover:bg-gray-200 hover:border-gray-400 transition-colors"
+                              >
+                                {suggestion}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex space-x-3">
                         <input
                           type="text"
