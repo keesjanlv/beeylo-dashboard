@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import FullscreenWrapper from '../../components/layout/FullscreenWrapper';
+import CustomerInfoSidebar from '../../components/CustomerInfoSidebar';
 import {
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
@@ -23,6 +24,8 @@ function ChatsSupabaseContent() {
   const [newMessage, setNewMessage] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'pending' | 'closed'>('all');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [viewMode, setViewMode] = useState<'chats' | 'customers'>('chats');
+  const [showCustomerSidebar, setShowCustomerSidebar] = useState(false);
 
   // Get user's company ID from profile
   const [companyId, setCompanyId] = useState<string | null>(null);
@@ -112,6 +115,19 @@ function ChatsSupabaseContent() {
     return diffInHours < 2 && (status === 'open' || status === 'pending');
   };
 
+  const isBriefingChat = (chat: any) => {
+    // A chat is considered a "briefing" (new) if:
+    // 1. It has no agent assigned yet, or
+    // 2. It was created less than 5 minutes ago and is open
+    if (!chat.agent_id) return true;
+
+    const createdDate = new Date(chat.created_at);
+    const now = new Date();
+    const diffInMinutes = (now.getTime() - createdDate.getTime()) / (1000 * 60);
+
+    return diffInMinutes < 5 && chat.status === 'open';
+  };
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedChatId) return;
 
@@ -125,10 +141,12 @@ function ChatsSupabaseContent() {
 
   const handleSelectChat = (chatId: string) => {
     setSelectedChatId(chatId);
+    setShowCustomerSidebar(true);
   };
 
   const handleBackToList = () => {
     setSelectedChatId(null);
+    setShowCustomerSidebar(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -160,6 +178,30 @@ function ChatsSupabaseContent() {
             {/* Chat List */}
             <div className="w-full lg:w-[420px] flex flex-col h-full min-h-0 border-r border-gray-200">
               <div className="p-4 border-b border-gray-200 bg-gray-50">
+                {/* View Mode Toggle */}
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => setViewMode('chats')}
+                    className={`flex-1 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                      viewMode === 'chats'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    Chats
+                  </button>
+                  <button
+                    onClick={() => setViewMode('customers')}
+                    className={`flex-1 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                      viewMode === 'customers'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    Customers
+                  </button>
+                </div>
+
                 {/* Search */}
                 <div className="relative mb-4">
                   <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -222,6 +264,60 @@ function ChatsSupabaseContent() {
                 ) : (
                   filteredChats.map((chat) => {
                     const urgent = isUrgent(chat.last_message_at, chat.status);
+                    const isBriefing = isBriefingChat(chat);
+
+                    // Render briefing card with amber styling
+                    if (isBriefing) {
+                      return (
+                        <div
+                          key={chat.id}
+                          onClick={() => handleSelectChat(chat.id)}
+                          className={`p-5 border-b border-gray-100 cursor-pointer hover:bg-amber-50 transition-all ${
+                            selectedChatId === chat.id
+                              ? 'bg-amber-50 border-l-4 border-l-amber-500'
+                              : 'bg-amber-25'
+                          }`}
+                          style={selectedChatId !== chat.id ? { backgroundColor: '#FFFBEB' } : {}}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className="w-12 h-12 bg-amber-200 rounded-full flex items-center justify-center flex-shrink-0">
+                              <span className="text-sm font-medium text-amber-800">
+                                {chat.customer?.name
+                                  ?.split(' ')
+                                  .map((n) => n[0])
+                                  .join('') || '?'}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <h3 className="text-sm font-semibold text-gray-900 truncate">
+                                  {chat.customer?.name || 'Unknown Customer'}
+                                </h3>
+                                <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ backgroundColor: '#FBBF16', color: '#78350f' }}>
+                                  NEW
+                                </span>
+                              </div>
+                              <p className="text-xs font-medium text-gray-700 truncate mb-2">
+                                {chat.subject || 'No subject'}
+                              </p>
+                              <div className="bg-white rounded-lg p-3 border border-amber-200">
+                                <p className="text-xs font-medium text-amber-900 mb-1">Briefing:</p>
+                                <p className="text-xs text-gray-700 line-clamp-2">
+                                  {chat.last_message || 'New chat awaiting response'}
+                                </p>
+                              </div>
+                              <div className="mt-2 flex items-center justify-between">
+                                <span className="text-xs text-gray-500">
+                                  {formatTime(chat.last_message_at || chat.created_at)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Regular chat rendering
                     return (
                       <div
                         key={chat.id}
@@ -287,7 +383,8 @@ function ChatsSupabaseContent() {
             </div>
 
             {/* Chat Window */}
-            <div className="w-full lg:flex-1 flex flex-col h-full min-h-0">
+            <div className="w-full lg:flex-1 flex flex-row h-full min-h-0">
+              <div className="flex-1 flex flex-col min-w-0">
               {selectedChat ? (
                 <>
                   {/* Chat Header - Matching height with left column */}
@@ -435,6 +532,30 @@ function ChatsSupabaseContent() {
                       Choose a conversation from the sidebar to start chatting
                     </p>
                   </div>
+                </div>
+              )}
+              </div>
+
+              {/* Customer Info Sidebar */}
+              {selectedChat && showCustomerSidebar && (
+                <div className="w-[360px] border-l border-gray-200">
+                  <CustomerInfoSidebar
+                    customerPersona={{
+                      id: selectedChat.customer_id,
+                      name: selectedChat.customer?.name || 'Unknown',
+                      beeyloId: selectedChat.customer_id,
+                      phone: '+1 (555) 123-4567',
+                      location: 'Unknown',
+                      joinDate: selectedChat.created_at,
+                      totalOrders: 0,
+                      totalSpent: 0,
+                      loyaltyTier: 'Bronze',
+                      preferredCategories: [],
+                      lastActivity: formatTime(selectedChat.last_message_at),
+                    }}
+                    orderHistory={[]}
+                    isVisible={showCustomerSidebar}
+                  />
                 </div>
               )}
             </div>
