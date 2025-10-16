@@ -34,7 +34,7 @@ export default function BeeyPage() {
   const [extraDetail, setExtraDetail] = useState('');
   const [beeyContent, setBeeyContent] = useState('');
   const [instructions, setInstructions] = useState(['']);
-  const [timelineStatus, setTimelineStatus] = useState('');
+  const [showInstructions, setShowInstructions] = useState(true);
 
   // Company info (mock data)
   const companyInfo = {
@@ -83,8 +83,7 @@ export default function BeeyPage() {
       subject: subjectLine,
       extraDetail,
       content: beeyContent,
-      instructions: instructions.filter(i => i.trim()),
-      timelineStatus
+      instructions: instructions.filter(i => i.trim())
     });
   };
 
@@ -95,7 +94,6 @@ export default function BeeyPage() {
     setSelectedRecipient(null);
     setRecipientSearch('');
     setInstructions(['']);
-    setTimelineStatus('');
   };
 
   return (
@@ -173,9 +171,10 @@ export default function BeeyPage() {
 
             {/* Beey Preview - Mobile-style ticket */}
             <div className="w-full bg-gray-50 min-h-screen">
-              {/* Header Card with Company Info */}
-              <div className="bg-white p-4 shadow-sm border-b border-gray-100">
-                <div className="flex items-center gap-3">
+              {/* Combined Header and Subject Card */}
+              <div className="bg-white mx-4 mt-6 p-5 rounded-xl shadow-sm border border-gray-100">
+                {/* Company Header */}
+                <div className="flex items-center gap-3 mb-4">
                   <ChevronLeftIcon className="w-6 h-6 text-gray-600" />
                   <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
                     <span className="text-white text-sm font-bold">
@@ -184,10 +183,8 @@ export default function BeeyPage() {
                   </div>
                   <span className="font-semibold text-lg">{companyInfo.name}</span>
                 </div>
-              </div>
 
-              {/* Second Section - Subject & Extra Detail */}
-              <div className="bg-white mx-4 mt-6 p-5 rounded-xl shadow-sm border border-gray-100">
+                {/* Subject & Extra Detail */}
                 <input
                   type="text"
                   value={subjectLine}
@@ -200,8 +197,14 @@ export default function BeeyPage() {
                   value={extraDetail}
                   onChange={(e) => setExtraDetail(e.target.value)}
                   placeholder="Add date or item detail"
-                  className="text-gray-600 w-full border-none outline-none focus:ring-0 p-0 text-sm"
+                  className="text-gray-600 w-full border-none outline-none focus:ring-0 p-0 text-sm mb-4"
                 />
+
+                {/* Yellowish Bar */}
+                <div className="flex items-center space-x-3 bg-yellow-50 p-3 rounded-lg">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span className="text-sm text-gray-700">Status update</span>
+                </div>
               </div>
 
               {/* Content Section */}
@@ -220,54 +223,51 @@ export default function BeeyPage() {
               <div className="bg-white mx-4 mt-4 p-5 rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-gray-900">Instructions</h3>
-                  <button
-                    onClick={addInstruction}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    + Add
-                  </button>
-                </div>
-                <ul className="space-y-2">
-                  {instructions.map((instruction, index) => (
-                    <li key={index} className="flex items-start space-x-2">
-                      <span className="text-gray-400 mt-1">•</span>
-                      <input
-                        type="text"
-                        value={instruction}
-                        onChange={(e) => updateInstruction(index, e.target.value)}
-                        placeholder="Add instruction"
-                        className="text-gray-600 text-sm flex-1 leading-relaxed border-none outline-none focus:ring-0 p-0"
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={addInstruction}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      + Add
+                    </button>
+                    <button
+                      onClick={() => setShowInstructions(!showInstructions)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        showInstructions ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          showInstructions ? 'translate-x-6' : 'translate-x-1'
+                        }`}
                       />
-                      {instructions.length > 1 && (
-                        <button
-                          onClick={() => removeInstruction(index)}
-                          className="text-red-400 hover:text-red-600"
-                        >
-                          <XMarkIcon className="w-4 h-4" />
-                        </button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Timeline Section */}
-              <div className="bg-white mx-4 mt-4 mb-8 p-5 rounded-xl shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-gray-900">Timeline</h3>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                    </button>
                   </div>
-                  <input
-                    type="text"
-                    value={timelineStatus}
-                    onChange={(e) => setTimelineStatus(e.target.value)}
-                    placeholder="Enter status"
-                    className="font-medium text-gray-900 leading-relaxed border-none outline-none focus:ring-0 p-0 w-full"
-                  />
                 </div>
+                {showInstructions && (
+                  <ul className="space-y-2">
+                    {instructions.map((instruction, index) => (
+                      <li key={index} className="flex items-start space-x-2">
+                        <span className="text-gray-400 mt-1">•</span>
+                        <input
+                          type="text"
+                          value={instruction}
+                          onChange={(e) => updateInstruction(index, e.target.value)}
+                          placeholder="Add instruction"
+                          className="text-gray-600 text-sm flex-1 leading-relaxed border-none outline-none focus:ring-0 p-0"
+                        />
+                        {instructions.length > 1 && (
+                          <button
+                            onClick={() => removeInstruction(index)}
+                            className="text-red-400 hover:text-red-600"
+                          >
+                            <XMarkIcon className="w-4 h-4" />
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* Footer Actions */}

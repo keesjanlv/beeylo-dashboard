@@ -136,6 +136,7 @@ const TicketPreviewComponent: React.FC<TicketPreviewComponentProps> = ({
   onDataChange,
   className = ''
 }) => {
+  const [showInstructions, setShowInstructions] = useState(true);
   const [ticketData, setTicketData] = useState<TicketData>(initialData || {
     companyName: 'Zalando',
     orderTitle: 'Order shipped',
@@ -245,25 +246,24 @@ const TicketPreviewComponent: React.FC<TicketPreviewComponentProps> = ({
 
   return (
     <div className={`w-full max-w-md mx-auto bg-gray-50 min-h-screen ${className}`}>
-       {/* Header Card */}
-       <div className="bg-white p-4 shadow-sm border-b border-gray-100">
-         <div className="flex items-center gap-3">
-           <ChevronLeft className="w-6 h-6 text-gray-600" />
-           <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-             <span className="text-white text-sm font-bold">
-               {getCompanyInitial(ticketData.companyName)}
-             </span>
-           </div>
-           <EditableText
-             value={ticketData.companyName}
-             onChange={(value) => updateTicketData('companyName', value)}
-             className="font-semibold text-lg"
-           />
-         </div>
-       </div>
-
-       {/* Order Status Card */}
+       {/* Combined Header and Order Status Card */}
         <div className="bg-white mx-4 mt-6 p-5 rounded-xl shadow-sm border border-gray-100">
+          {/* Company Header */}
+          <div className="flex items-center gap-3 mb-4">
+            <ChevronLeft className="w-6 h-6 text-gray-600" />
+            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-bold">
+                {getCompanyInitial(ticketData.companyName)}
+              </span>
+            </div>
+            <EditableText
+              value={ticketData.companyName}
+              onChange={(value) => updateTicketData('companyName', value)}
+              className="font-semibold text-lg"
+            />
+          </div>
+
+          {/* Subject and Status */}
           <EditableText
             value={ticketData.orderTitle}
             onChange={(value) => updateTicketData('orderTitle', value)}
@@ -369,27 +369,43 @@ const TicketPreviewComponent: React.FC<TicketPreviewComponentProps> = ({
 
        {/* Instructions Card */}
        <div className="bg-white mx-4 mt-4 p-5 rounded-xl shadow-sm border border-gray-100">
-         <h3 className="font-semibold text-gray-900 mb-3">Instructions</h3>
-         <ul className="space-y-1">
-           {ticketData.instructions.items.map((instruction, index) => (
-             <li key={index} className="flex items-start space-x-2">
-               <span className="text-gray-400 mt-1">•</span>
-               <EditableText
-                 value={instruction}
-                 onChange={(value) => {
-                   const newItems = [...ticketData.instructions.items];
-                   newItems[index] = value;
-                   updateTicketData('instructions.items', newItems);
-                 }}
-                 className="text-gray-600 text-sm flex-1 leading-relaxed"
-               />
-             </li>
-           ))}
-         </ul>
+         <div className="flex items-center justify-between mb-3">
+           <h3 className="font-semibold text-gray-900">Instructions</h3>
+           <button
+             onClick={() => setShowInstructions(!showInstructions)}
+             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+               showInstructions ? 'bg-blue-600' : 'bg-gray-200'
+             }`}
+           >
+             <span
+               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                 showInstructions ? 'translate-x-6' : 'translate-x-1'
+               }`}
+             />
+           </button>
+         </div>
+         {showInstructions && (
+           <ul className="space-y-1">
+             {ticketData.instructions.items.map((instruction, index) => (
+               <li key={index} className="flex items-start space-x-2">
+                 <span className="text-gray-400 mt-1">•</span>
+                 <EditableText
+                   value={instruction}
+                   onChange={(value) => {
+                     const newItems = [...ticketData.instructions.items];
+                     newItems[index] = value;
+                     updateTicketData('instructions.items', newItems);
+                   }}
+                   className="text-gray-600 text-sm flex-1 leading-relaxed"
+                 />
+               </li>
+             ))}
+           </ul>
+         )}
        </div>
 
        {/* Action Buttons Card */}
-       <div className="bg-white mx-4 mt-4 p-5 rounded-xl shadow-sm border border-gray-100">
+       <div className="bg-white mx-4 mt-4 mb-8 p-5 rounded-xl shadow-sm border border-gray-100">
          <h3 className="font-semibold text-gray-900 mb-3">Actions</h3>
          <div className="grid grid-cols-2 gap-3">
            <button className="flex items-center justify-center px-4 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors text-sm font-medium text-gray-700">
@@ -404,24 +420,6 @@ const TicketPreviewComponent: React.FC<TicketPreviewComponentProps> = ({
            <button className="flex items-center justify-center px-4 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors text-sm font-medium text-gray-700">
              Invoice
            </button>
-         </div>
-       </div>
-
-       {/* Timeline Card */}
-       <div className="bg-white mx-4 mt-4 mb-8 p-5 rounded-xl shadow-sm border border-gray-100">
-         <div className="flex items-center justify-between mb-3">
-           <h3 className="font-semibold text-gray-900">Timeline</h3>
-           <button className="text-gray-400 text-sm">Show more ▼</button>
-         </div>
-         <div className="flex items-center space-x-3">
-           <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-             <div className="w-2 h-2 bg-white rounded-full"></div>
-           </div>
-           <EditableText
-             value={ticketData.timeline.status}
-             onChange={(value) => updateTicketData('timeline.status', value)}
-             className="font-medium text-gray-900 leading-relaxed"
-           />
          </div>
        </div>
      </div>
