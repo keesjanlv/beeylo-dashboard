@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import FullscreenWrapper from '../../components/layout/FullscreenWrapper';
 import CustomerInfoSidebar from '../../components/CustomerInfoSidebar';
 import ChatCard from '../../components/ChatCard';
@@ -45,10 +44,6 @@ interface Chat {
 }
 
 export default function ChatsPage() {
-  const router = useRouter();
-  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const clickCountRef = useRef(0);
-
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -262,26 +257,6 @@ export default function ChatsPage() {
     },
   ]);
 
-  // Handle triple click to navigate to supabase version
-  const handlePageClick = () => {
-    clickCountRef.current += 1;
-
-    if (clickTimeoutRef.current) {
-      clearTimeout(clickTimeoutRef.current);
-    }
-
-    if (clickCountRef.current === 3) {
-      // Triple click detected
-      router.push('/chats-supabase');
-      clickCountRef.current = 0;
-    } else {
-      // Reset counter after 500ms
-      clickTimeoutRef.current = setTimeout(() => {
-        clickCountRef.current = 0;
-      }, 500);
-    }
-  };
-
   const selectedChat = chats.find((c) => c.id === selectedChatId);
 
   const filteredChats = chats.filter((chat) => {
@@ -405,10 +380,7 @@ export default function ChatsPage() {
 
   return (
     <FullscreenWrapper>
-      <div
-        className="flex flex-col bg-gray-50 !p-0 !m-0 !max-w-none h-full w-full"
-        onClick={handlePageClick}
-      >
+      <div className="flex flex-col bg-gray-50 !p-0 !m-0 !max-w-none h-full w-full">
         <div className="flex flex-col lg:flex-row flex-1 min-h-0">
           <div className="flex flex-col lg:flex-row flex-1 bg-white overflow-hidden">
             {/* Chat List (Chats view) OR Customer List (Customers view) */}
@@ -777,9 +749,6 @@ export default function ChatsPage() {
                       </h3>
                       <p className="text-gray-500">
                         Choose a conversation from the sidebar to start chatting
-                      </p>
-                      <p className="text-xs text-gray-400 mt-4">
-                        Tip: Triple-click anywhere to view Supabase version
                       </p>
                     </div>
                   </div>

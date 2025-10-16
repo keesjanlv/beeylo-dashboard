@@ -4,10 +4,9 @@ import { useState } from 'react';
 import FullscreenWrapper from '../../components/layout/FullscreenWrapper';
 import {
   MagnifyingGlassIcon,
-  UserIcon,
-  XMarkIcon
+  XMarkIcon,
+  ChevronLeftIcon
 } from '@heroicons/react/24/outline';
-import { TrophyIcon } from '@heroicons/react/24/solid';
 
 interface Customer {
   id: string;
@@ -32,7 +31,10 @@ export default function BeeyPage() {
   const [selectedRecipient, setSelectedRecipient] = useState<Customer | null>(null);
   const [showRecipientDropdown, setShowRecipientDropdown] = useState(false);
   const [subjectLine, setSubjectLine] = useState('');
+  const [extraDetail, setExtraDetail] = useState('');
   const [beeyContent, setBeeyContent] = useState('');
+  const [instructions, setInstructions] = useState(['']);
+  const [timelineStatus, setTimelineStatus] = useState('');
 
   // Company info (mock data)
   const companyInfo = {
@@ -58,9 +60,42 @@ export default function BeeyPage() {
     setRecipientSearch('');
   };
 
-  const getBeeyloHandle = (beeyloId: string) => {
-    // Convert BEY-001 to @bey001
-    return '@' + beeyloId.toLowerCase().replace('-', '');
+  const getCompanyInitial = (name: string) => name.charAt(0).toUpperCase();
+
+  const addInstruction = () => {
+    setInstructions([...instructions, '']);
+  };
+
+  const updateInstruction = (index: number, value: string) => {
+    const newInstructions = [...instructions];
+    newInstructions[index] = value;
+    setInstructions(newInstructions);
+  };
+
+  const removeInstruction = (index: number) => {
+    setInstructions(instructions.filter((_, i) => i !== index));
+  };
+
+  const handleSend = () => {
+    // TODO: Implement send functionality
+    console.log('Sending Beey:', {
+      recipient: selectedRecipient,
+      subject: subjectLine,
+      extraDetail,
+      content: beeyContent,
+      instructions: instructions.filter(i => i.trim()),
+      timelineStatus
+    });
+  };
+
+  const handleClear = () => {
+    setBeeyContent('');
+    setSubjectLine('');
+    setExtraDetail('');
+    setSelectedRecipient(null);
+    setRecipientSearch('');
+    setInstructions(['']);
+    setTimelineStatus('');
   };
 
   return (
@@ -74,7 +109,7 @@ export default function BeeyPage() {
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-md mx-auto">
             {/* Recipient Search */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -136,84 +171,120 @@ export default function BeeyPage() {
               </div>
             </div>
 
-            {/* Beey Preview */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              {/* Header with Company Info */}
-              <div className="bg-white p-6 border-b border-gray-200">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <TrophyIcon className="h-10 w-10 text-gray-700" />
+            {/* Beey Preview - Mobile-style ticket */}
+            <div className="w-full bg-gray-50 min-h-screen">
+              {/* Header Card with Company Info */}
+              <div className="bg-white p-4 shadow-sm border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <ChevronLeftIcon className="w-6 h-6 text-gray-600" />
+                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">
+                      {getCompanyInitial(companyInfo.name)}
+                    </span>
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">{companyInfo.name}</h2>
-                    <p className="text-gray-700 text-sm">{companyInfo.bio}</p>
-                  </div>
+                  <span className="font-semibold text-lg">{companyInfo.name}</span>
                 </div>
               </div>
 
-              {/* Recipient Info */}
-              {selectedRecipient && (
-                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <UserIcon className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">To: {selectedRecipient.name}</p>
-                      <p className="text-xs text-blue-600 font-medium">{getBeeyloHandle(selectedRecipient.beeyloId)}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Subject Line */}
-              <div className="px-6 pt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Subject
-                </label>
+              {/* Second Section - Subject & Extra Detail */}
+              <div className="bg-white mx-4 mt-6 p-5 rounded-xl shadow-sm border border-gray-100">
                 <input
                   type="text"
                   value={subjectLine}
                   onChange={(e) => setSubjectLine(e.target.value)}
-                  placeholder="Enter subject line"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter subject"
+                  className="text-xl font-bold text-gray-900 mb-1 w-full border-none outline-none focus:ring-0 p-0"
+                />
+                <input
+                  type="text"
+                  value={extraDetail}
+                  onChange={(e) => setExtraDetail(e.target.value)}
+                  placeholder="Add date or item detail"
+                  className="text-gray-600 w-full border-none outline-none focus:ring-0 p-0 text-sm"
                 />
               </div>
 
-              {/* Content Area */}
-              <div className="px-6 pb-6 pt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Your Message
-                </label>
+              {/* Content Section */}
+              <div className="bg-white mx-4 mt-4 p-5 rounded-xl shadow-sm border border-gray-100">
+                <h3 className="font-semibold text-gray-900 mb-3">Content</h3>
                 <textarea
                   value={beeyContent}
                   onChange={(e) => setBeeyContent(e.target.value)}
-                  placeholder="Type your message here"
-                  rows={10}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  placeholder="Type your message here..."
+                  rows={8}
+                  className="text-gray-600 text-sm leading-relaxed w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 />
-                <p className="text-xs text-gray-500 mt-2">
-                  {beeyContent.length} characters
-                </p>
               </div>
 
-              {/* Footer */}
-              <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+              {/* Instructions Section */}
+              <div className="bg-white mx-4 mt-4 p-5 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-900">Instructions</h3>
+                  <button
+                    onClick={addInstruction}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    + Add
+                  </button>
+                </div>
+                <ul className="space-y-2">
+                  {instructions.map((instruction, index) => (
+                    <li key={index} className="flex items-start space-x-2">
+                      <span className="text-gray-400 mt-1">•</span>
+                      <input
+                        type="text"
+                        value={instruction}
+                        onChange={(e) => updateInstruction(index, e.target.value)}
+                        placeholder="Add instruction"
+                        className="text-gray-600 text-sm flex-1 leading-relaxed border-none outline-none focus:ring-0 p-0"
+                      />
+                      {instructions.length > 1 && (
+                        <button
+                          onClick={() => removeInstruction(index)}
+                          className="text-red-400 hover:text-red-600"
+                        >
+                          <XMarkIcon className="w-4 h-4" />
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Timeline Section */}
+              <div className="bg-white mx-4 mt-4 mb-8 p-5 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-900">Timeline</h3>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <input
+                    type="text"
+                    value={timelineStatus}
+                    onChange={(e) => setTimelineStatus(e.target.value)}
+                    placeholder="Enter status"
+                    className="font-medium text-gray-900 leading-relaxed border-none outline-none focus:ring-0 p-0 w-full"
+                  />
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="bg-white mx-4 mb-8 p-5 rounded-xl shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-gray-500">
                     Sent from {companyInfo.name}
                   </div>
                   <div className="flex gap-3">
                     <button
-                      onClick={() => {
-                        setBeeyContent('');
-                        setSubjectLine('');
-                        setSelectedRecipient(null);
-                        setRecipientSearch('');
-                      }}
+                      onClick={handleClear}
                       className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                     >
                       Clear
                     </button>
                     <button
+                      onClick={handleSend}
                       disabled={!selectedRecipient || !beeyContent.trim() || !subjectLine.trim()}
                       className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
