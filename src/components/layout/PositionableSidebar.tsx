@@ -372,13 +372,24 @@ export default function PositionableSidebar({
         {/* Logo and Title */}
         <div className="flex items-center justify-between mb-4">
           {isCollapsed ? (
-            <button
-              onClick={() => setIsCollapsed(false)}
-              className="w-full p-2 rounded-md hover:bg-gray-100 transition-colors flex items-center justify-center"
-              title="Expand sidebar"
-            >
-              <ChevronRightIcon className="h-4 w-4 text-gray-500" />
-            </button>
+            <div className="w-full flex flex-col items-center gap-3">
+              <Link href="/" className="hover:opacity-80 transition-opacity">
+                <Image
+                  src="/logo.png"
+                  alt="Beeylo Logo"
+                  width={32}
+                  height={32}
+                  className="rounded"
+                />
+              </Link>
+              <button
+                onClick={() => setIsCollapsed(false)}
+                className="w-full p-2 rounded-md hover:bg-gray-100 transition-colors flex items-center justify-center"
+                title="Expand sidebar"
+              >
+                <ChevronRightIcon className="h-4 w-4 text-gray-500" />
+              </button>
+            </div>
           ) : (
             <>
               <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">

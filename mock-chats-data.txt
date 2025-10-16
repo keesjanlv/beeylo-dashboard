@@ -1,0 +1,210 @@
+// Complete mock chats data with all required changes
+const mockChats = [
+  // Briefing Card 1 - Carlos Rodriguez (Urgent)
+  {
+    id: '1',
+    customer: { name: 'Carlos Rodriguez', email: 'carlos@example.com' },
+    subject: 'Defective Product Received - Business Order Deadline',
+    status: 'open',
+    last_message_at: new Date(Date.now() - 46 * 60000).toISOString(),
+    isBriefing: true,
+    sentiment: 'angry',
+    briefingSummary: 'Bulk order of 50 jerseys has 15 items with wrong logo printed. Tournament deadline in 48 hours.',
+    aiSuggestions: ['Offer expedited replacement', 'Process full refund', 'Provide 25% discount'],
+    messages: [
+      {
+        id: 'm1',
+        content: 'Bulk order of 50 jerseys has 15 items with wrong logo printed. Tournament deadline in 48 hours.',
+        sender: { name: 'Carlos Rodriguez', role: 'customer' },
+        created_at: new Date(Date.now() - 46 * 60000).toISOString(),
+      }
+    ],
+  },
+
+  // Briefing Card 2 - Jennifer Martinez (New Customer)
+  {
+    id: '2',
+    customer: { name: 'Jennifer Martinez', email: 'jennifer@example.com' },
+    subject: 'Wrong Item Shipped - Need Replacement Before Weekend',
+    status: 'open',
+    last_message_at: new Date(Date.now() - 120 * 60000).toISOString(),
+    isBriefing: true,
+    sentiment: 'neutral',
+    briefingSummary: 'Ordered size M blue jacket, received size L red jacket instead. Needs correct item before weekend event.',
+    aiSuggestions: ['Arrange immediate replacement', 'Offer free return shipping', 'Apply courtesy discount'],
+    messages: [
+      {
+        id: 'm2_1',
+        content: 'I ordered a size M blue jacket but received a size L red jacket instead. I need the correct item before this weekend for an event. Order #45789',
+        sender: { name: 'Jennifer Martinez', role: 'customer' },
+        created_at: new Date(Date.now() - 120 * 60000).toISOString(),
+      }
+    ],
+  },
+
+  // Regular Chat 1 - Carlos Rodriguez (Follow-up on old issue)
+  {
+    id: '3',
+    customer: { name: 'Carlos Rodriguez', email: 'carlos2@example.com' },
+    subject: 'Defective Product Received - Business Order Deadl...',
+    status: 'open',
+    last_message_at: new Date(Date.now() - 62 * 24 * 3600000).toISOString(),
+    sentiment: 'angry',
+    last_message: 'I just received my bulk order of 50 custom jerseys, f... product issue',
+    aiSuggestions: ['Schedule follow-up call', 'Send replacement batch', 'Escalate to supervisor'],
+    messages: [
+      {
+        id: 'm3a',
+        content: 'I just received my bulk order of 50 custom jerseys, but there is a product issue.',
+        sender: { name: 'Carlos Rodriguez', role: 'customer' },
+        created_at: new Date(Date.now() - 62 * 24 * 3600000).toISOString(),
+      },
+      {
+        id: 'm3b',
+        content: 'I\'m sorry to hear about the issue. Let me help you with that right away.',
+        sender: { name: 'Support Agent', role: 'agent' },
+        created_at: new Date(Date.now() - 62 * 24 * 3600000 + 300000).toISOString(),
+      }
+    ],
+  },
+
+  // Regular Chat 2 - Emma Thompson (Expanded conversation)
+  {
+    id: '4',
+    customer: { name: 'Emma Thompson', email: 'emma@example.com' },
+    subject: 'Multiple Issues with Recent Order - Urgent Help Nee...',
+    status: 'open',
+    last_message_at: new Date(Date.now() - 457 * 24 * 3600000).toISOString(),
+    sentiment: 'angry',
+    last_message: 'Thank you, I really appreciate your help on this',
+    aiSuggestions: ['Provide tracking update', 'Issue partial refund', 'Send apology gift'],
+    messages: [
+      {
+        id: 'm4a',
+        content: 'Hi there, I\'m writing because I\'m extremely frustrated with multiple issues on my recent order #34521. First, the delivery was 5 days late despite paying for express shipping. Second, when it finally arrived, 2 out of 5 items were damaged with torn packaging. Third, one item was completely missing from the box. I\'ve been a loyal customer for 3 years and have never experienced such poor service. This order was for my daughter\'s birthday party which has already passed. I need this resolved immediately.',
+        sender: { name: 'Emma Thompson', role: 'customer' },
+        created_at: new Date(Date.now() - 457 * 24 * 3600000).toISOString(),
+        hasAISummary: true,
+        aiSummary: 'Customer experienced 3 issues: (1) 5-day late express delivery, (2) 2/5 items damaged, (3) 1 item missing. Order was for daughter\'s birthday (now passed). 3-year loyal customer seeking immediate resolution.'
+      },
+      {
+        id: 'm4b',
+        content: 'Emma, I sincerely apologize for this terrible experience. You\'re absolutely right to be upset. Let me address each issue: I\'m processing a full refund for your express shipping right now. For the damaged items, I\'ll send replacements via overnight shipping at no cost. For the missing item, I\'m also shipping that overnight. Additionally, I\'d like to offer you a $50 credit and 20% off your next order as an apology. Would this help make things right?',
+        sender: { name: 'Support Agent', role: 'agent' },
+        created_at: new Date(Date.now() - 457 * 24 * 3600000 + 600000).toISOString(),
+      },
+      {
+        id: 'm4c',
+        content: 'Thank you for the quick response and for taking this seriously. Yes, that would be very helpful. Can you confirm the tracking numbers for the overnight shipments?',
+        sender: { name: 'Emma Thompson', role: 'customer' },
+        created_at: new Date(Date.now() - 457 * 24 * 3600000 + 1200000).toISOString(),
+      },
+      {
+        id: 'm4d',
+        content: 'Absolutely! I\'ve sent the tracking numbers to your email. The packages should arrive tomorrow by 3 PM. Your $50 credit has been applied to your account, and I\'ve added a note for the 20% discount on your next purchase. Is there anything else I can help you with?',
+        sender: { name: 'Support Agent', role: 'agent' },
+        created_at: new Date(Date.now() - 457 * 24 * 3600000 + 1500000).toISOString(),
+      },
+      {
+        id: 'm4e',
+        content: 'Thank you, I really appreciate your help on this',
+        sender: { name: 'Emma Thompson', role: 'customer' },
+        created_at: new Date(Date.now() - 457 * 24 * 3600000 + 1800000).toISOString(),
+      }
+    ],
+  },
+
+  // Regular Chat 3 - Maria Santos (Expanded conversation)
+  {
+    id: '5',
+    customer: { name: 'Maria Santos', email: 'maria@example.com' },
+    subject: 'Tent Return - Wrong Size',
+    status: 'pending',
+    last_message_at: new Date(Date.now() - 458 * 24 * 3600000).toISOString(),
+    sentiment: 'neutral',
+    last_message: 'Perfect, I\'ll get that tent returned today then!',
+    aiSuggestions: ['Send return label', 'Process exchange', 'Waive restocking fee'],
+    messages: [
+      {
+        id: 'm5a',
+        content: 'I need to return this 4-person tent and get a 6-person tent instead. We just realized we need more space for our camping trip next month.',
+        sender: { name: 'Maria Santos', role: 'customer' },
+        created_at: new Date(Date.now() - 458 * 24 * 3600000).toISOString(),
+      },
+      {
+        id: 'm5b',
+        content: 'Hi Maria! I\'d be happy to help you exchange that. Can you provide your order number so I can process the return and send you a prepaid shipping label?',
+        sender: { name: 'Support Agent', role: 'agent' },
+        created_at: new Date(Date.now() - 458 * 24 * 3600000 + 300000).toISOString(),
+      },
+      {
+        id: 'm5c',
+        content: 'Sure! The order number is #67234. Will there be any restocking fees?',
+        sender: { name: 'Maria Santos', role: 'customer' },
+        created_at: new Date(Date.now() - 458 * 24 * 3600000 + 600000).toISOString(),
+      },
+      {
+        id: 'm5d',
+        content: 'Great! Since this is an exchange and the tent is in new condition, I\'ll waive the restocking fee. I\'ve emailed you the return label. Once we receive the 4-person tent, we\'ll ship out the 6-person tent at no additional cost. The new tent is actually on sale right now, so you\'ll receive a $30 credit too!',
+        sender: { name: 'Support Agent', role: 'agent' },
+        created_at: new Date(Date.now() - 458 * 24 * 3600000 + 900000).toISOString(),
+      },
+      {
+        id: 'm5e',
+        content: 'Perfect, I\'ll get that tent returned today then!',
+        sender: { name: 'Maria Santos', role: 'customer' },
+        created_at: new Date(Date.now() - 458 * 24 * 3600000 + 1200000).toISOString(),
+      }
+    ],
+  },
+
+  // Regular Chat 4 - Linda Garcia (Expanded conversation)
+  {
+    id: '6',
+    customer: { name: 'Linda Garcia', email: 'linda@example.com' },
+    subject: 'Fitness Tracker Sync Issues',
+    status: 'closed',
+    last_message_at: new Date(Date.now() - 458 * 24 * 3600000).toISOString(),
+    sentiment: 'happy',
+    last_message: 'It works! Thank you so much for your patience!',
+    aiSuggestions: [],
+    messages: [
+      {
+        id: 'm6a',
+        content: 'The device won\'t sync with my phone app. I\'ve tried restarting both the tracker and my phone multiple times.',
+        sender: { name: 'Linda Garcia', role: 'customer' },
+        created_at: new Date(Date.now() - 458 * 24 * 3600000).toISOString(),
+      },
+      {
+        id: 'm6b',
+        content: 'Hi Linda! I can help troubleshoot this. Which phone model are you using, and have you checked if Bluetooth is enabled?',
+        sender: { name: 'Support Agent', role: 'agent' },
+        created_at: new Date(Date.now() - 458 * 24 * 3600000 + 300000).toISOString(),
+      },
+      {
+        id: 'm6c',
+        content: 'I have an iPhone 13 and yes, Bluetooth is on. I can see other devices but not the fitness tracker.',
+        sender: { name: 'Linda Garcia', role: 'customer' },
+        created_at: new Date(Date.now() - 458 * 24 * 3600000 + 600000).toISOString(),
+      },
+      {
+        id: 'm6d',
+        content: 'Thanks for that info. Let\'s try this: 1) Delete the app and reinstall it, 2) Make sure location permissions are enabled for the app, 3) In the tracker settings, do a factory reset (hold button for 10 seconds). Then try pairing again. Let me know if this works!',
+        sender: { name: 'Support Agent', role: 'agent' },
+        created_at: new Date(Date.now() - 458 * 24 * 3600000 + 900000).toISOString(),
+      },
+      {
+        id: 'm6e',
+        content: 'It works! Thank you so much for your patience!',
+        sender: { name: 'Linda Garcia', role: 'customer' },
+        created_at: new Date(Date.now() - 458 * 24 * 3600000 + 1500000).toISOString(),
+      },
+      {
+        id: 'm6f',
+        content: 'Wonderful! I\'m so glad we got it working. Enjoy your fitness tracker! Feel free to reach out if you need anything else.',
+        sender: { name: 'Support Agent', role: 'agent' },
+        created_at: new Date(Date.now() - 458 * 24 * 3600000 + 1600000).toISOString(),
+      }
+    ],
+  },
+];
