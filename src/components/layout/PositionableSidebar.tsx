@@ -131,8 +131,6 @@ export default function PositionableSidebar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState<string>('0m 0s');
-  const [showUrgentBriefing, setShowUrgentBriefing] = useState(false);
   const [showAdminChats, setShowAdminChats] = useState(false);
   const [clickCount, setClickCount] = useState(0);
   const [clickTimeout, setClickTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -157,38 +155,6 @@ export default function PositionableSidebar({
 
     fetchUserProfile();
   }, [user]);
-
-  // Mock urgent briefing data
-  const urgentBriefing = {
-    customerName: 'Carlos Rodriguez',
-    subject: 'Defective Product Received - Business Order Deadline',
-    sentiment: 'frustrated',
-    summary: 'Bulk order of 50 jerseys has 15 items with wrong logo printed. Tournament deadline in 48 hours.',
-    calculatedActions: [
-      'Call customer immediately + arrange emergency reprint with overnight shipping',
-      'Process full refund for defective items and offer 25% discount on order'
-    ],
-    riskLevel: 'critical' as const,
-    estimatedResolutionTime: '24 hours',
-    customerValue: 'high' as const,
-    lastMessageTime: '2025-10-09T10:25:00Z'
-  };
-
-  // Real-time timer for urgent briefing - starts at 0
-  useEffect(() => {
-    const startTime = Date.now();
-
-    const updateTimer = () => {
-      const diffMs = Date.now() - startTime;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffSecs = Math.floor((diffMs % 60000) / 1000);
-      setElapsedTime(`${String(diffMins).padStart(2, '0')}:${String(diffSecs).padStart(2, '0')}`);
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Handle triple-click on notifications
   const handleNotificationClick = () => {
@@ -265,7 +231,7 @@ export default function PositionableSidebar({
         position === 'top' ? 'border-b shadow-sm' : 'border-t shadow-sm'
       }`}>
         {/* Logo and Brand */}
-        <div className="flex items-center space-x-3">
+        <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
           <Image
             src="/logo.png"
             alt="Logo"
@@ -274,7 +240,7 @@ export default function PositionableSidebar({
             className="rounded"
           />
           <span className="text-base font-semibold text-gray-900">Beeylo</span>
-        </div>
+        </Link>
 
         {/* Navigation */}
         <nav className="flex items-center space-x-1">
@@ -315,40 +281,6 @@ export default function PositionableSidebar({
           <button className="p-2 rounded-lg hover:bg-gray-50 transition-colors group">
             <MagnifyingGlassIcon className="h-5 w-5 text-gray-500 group-hover:text-gray-700" />
           </button>
-
-          {/* Notifications */}
-          <div className="relative">
-            <button
-              onClick={handleNotificationClick}
-              className="relative p-2 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <BellIcon className="h-5 w-5 text-gray-500" />
-              {notifications.length > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 px-1.5 text-xs font-semibold text-white bg-blue-500 rounded-full flex items-center justify-center min-w-[20px]">
-                  {notifications.length}
-                </span>
-              )}
-            </button>
-
-            {showNotifications && (
-              <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto w-80">
-                <div className="p-3 border-b border-gray-100">
-                  <h4 className="text-sm font-semibold text-gray-900">Recent Updates</h4>
-                </div>
-                {notifications.map((notification) => (
-                  <div key={notification.id} className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer">
-                    <div className="flex items-start space-x-3">
-                      <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${notification.unread ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">{notification.message}</p>
-                        <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* User Profile */}
           <Menu as="div" className="relative">
@@ -439,24 +371,34 @@ export default function PositionableSidebar({
       <div className="p-4">
         {/* Logo and Title */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <Image
-              src="/logo.png"
-              alt="Logo"
-              width={28}
-              height={28}
-              className="rounded"
-            />
-            {!isCollapsed && <span className="text-base font-semibold text-gray-900">Beeylo</span>}
-          </div>
-          {!isCollapsed && (
+          {isCollapsed ? (
             <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
-              title="Collapse sidebar"
+              onClick={() => setIsCollapsed(false)}
+              className="w-full p-2 rounded-md hover:bg-gray-100 transition-colors flex items-center justify-center"
+              title="Expand sidebar"
             >
-              <ChevronRightIcon className="h-4 w-4 text-gray-500 rotate-180" />
+              <ChevronRightIcon className="h-4 w-4 text-gray-500" />
             </button>
+          ) : (
+            <>
+              <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+                <Image
+                  src="/logo.png"
+                  alt="Logo"
+                  width={28}
+                  height={28}
+                  className="rounded"
+                />
+                <span className="text-base font-semibold text-gray-900">Beeylo</span>
+              </Link>
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+                title="Collapse sidebar"
+              >
+                <ChevronRightIcon className="h-4 w-4 text-gray-500 rotate-180" />
+              </button>
+            </>
           )}
         </div>
 
@@ -486,84 +428,6 @@ export default function PositionableSidebar({
           >
             <MagnifyingGlassIcon className="h-5 w-5 text-gray-500" />
           </button>
-        )}
-
-        {/* Urgent Briefing Alert (shown when not on chats page) */}
-        {!isCollapsed && pathname !== '/chats' && (
-          <div className="mt-4 relative">
-            <button
-              onClick={() => setShowUrgentBriefing(!showUrgentBriefing)}
-              className="w-full p-3 bg-white rounded-xl hover:shadow-lg transition-all text-left shadow-md border border-gray-100"
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="px-1.5 py-0.5 text-xs font-bold rounded bg-red-100 text-red-800 uppercase">
-                  Urgent
-                </span>
-                <span className="text-xs text-gray-500 font-mono">{elapsedTime}</span>
-              </div>
-              <p className="text-xs font-semibold text-gray-900">{urgentBriefing.customerName}</p>
-              <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">{urgentBriefing.subject}</p>
-            </button>
-
-            {/* Urgent Briefing Dropdown */}
-            {showUrgentBriefing && (
-              <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl z-50">
-                <div className="p-3">
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="px-2 py-1 text-xs font-bold rounded bg-red-100 text-red-800 uppercase">
-                      Urgent
-                    </span>
-                    <span className="text-xs text-gray-500 font-mono">{elapsedTime}</span>
-                  </div>
-
-                  {/* Customer Info */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                      <span className="text-xs font-medium text-gray-700">
-                        {urgentBriefing.customerName.split(' ').map(n => n[0]).join('')}
-                      </span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-gray-900">{urgentBriefing.customerName}</h3>
-                      <span className="text-xs text-gray-500 capitalize">{urgentBriefing.sentiment}</span>
-                    </div>
-                  </div>
-
-                  {/* Subject */}
-                  <div className="mb-2">
-                    <h4 className="text-xs font-medium text-gray-900">{urgentBriefing.subject}</h4>
-                  </div>
-
-                  {/* AI Summary */}
-                  <div className="mb-3">
-                    <p className="text-xs text-gray-600 leading-relaxed">{urgentBriefing.summary}</p>
-                  </div>
-
-                  {/* Calculated Actions */}
-                  <div className="bg-gray-50 rounded-lg p-2 border border-gray-200 mb-3">
-                    <p className="text-xs font-semibold text-gray-900 mb-1">Actions:</p>
-                    <ol className="space-y-0.5">
-                      {urgentBriefing.calculatedActions.map((action, idx) => (
-                        <li key={idx} className="text-xs text-gray-700 flex items-start gap-1">
-                          <span className="font-semibold text-gray-900 flex-shrink-0">{idx + 1}.</span>
-                          <span>{action}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-
-                  {/* Go to Chats Button */}
-                  <Link
-                    href="/chats"
-                    className="w-full block text-center px-3 py-1.5 bg-red-600 text-white rounded-lg font-semibold text-xs hover:bg-red-700 transition-colors"
-                  >
-                    Go to Chats
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
         )}
       </div>
 
@@ -651,20 +515,6 @@ export default function PositionableSidebar({
                   );
                 })}
 
-              {/* Notifications Link */}
-              <button
-                onClick={handleNotificationClick}
-                className="w-full group flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-gray-700 hover:bg-gray-50 relative"
-              >
-                <BellIcon className="h-5 w-5 mr-3 transition-colors text-gray-500 group-hover:text-gray-700" />
-                <span className="flex-1 text-left">Notifications</span>
-                {notifications.length > 0 && (
-                  <span className="ml-auto h-5 px-2 text-xs font-semibold text-white bg-blue-500 rounded-full flex items-center justify-center">
-                    {notifications.length}
-                  </span>
-                )}
-              </button>
-
               {/* Beey Button */}
               <Link
                 href="/beey"
@@ -682,25 +532,6 @@ export default function PositionableSidebar({
                 <span className="flex-1">Beey</span>
               </Link>
 
-              {/* Notifications Dropdown */}
-              {showNotifications && (
-                <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto mx-3">
-                  <div className="p-2.5 border-b border-gray-100">
-                    <h4 className="text-xs font-semibold text-gray-900">Recent Updates</h4>
-                  </div>
-                  {notifications.map((notification) => (
-                    <div key={notification.id} className="p-2.5 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer">
-                      <div className="flex items-start space-x-2">
-                        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${notification.unread ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-900">{notification.message}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{notification.time}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </>
         )}
@@ -730,18 +561,6 @@ export default function PositionableSidebar({
                 </Link>
               );
             })}
-            <button
-              onClick={handleNotificationClick}
-              className="w-full group flex items-center justify-center p-2.5 rounded-lg transition-all duration-200 hover:bg-gray-50 relative"
-              title="Notifications"
-            >
-              <BellIcon className="h-5 w-5 text-gray-500 group-hover:text-gray-700" />
-              {notifications.length > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 text-xs font-bold text-white bg-blue-500 rounded-full flex items-center justify-center">
-                  {notifications.length}
-                </span>
-              )}
-            </button>
 
             {/* Beey Button - Collapsed */}
             <Link

@@ -1,0 +1,2423 @@
+          1 +  # 🚀 BEEYLO ECOSYSTEM - COMPLETE IMPLEMENTATION PLAN
+          2 +  
+          3 +  **Version**: 1.0
+          4 +  **Last Updated**: October 15, 2025
+          5 +  **Estimated Timeline**: 12 weeks
+          6 +  
+          7 +  ---
+          8 +  
+          9 +  ## 📋 TABLE OF CONTENTS
+         10 +  
+         11 +  1. [Basic Rules & Principles](#basic-rules--principles)
+         12 +  2. [Current System Status](#current-system-status)
+         13 +  3. [Critical Architecture Decisions](#critical-architecture-decisions)
+         14 +  4. [Phase-by-Phase Implementation](#phase-by-phase-implementation)
+         15 +  5. [Testing & Validation](#testing--validation)
+         16 +  6. [Rollback Procedures](#rollback-procedures)
+         17 +  
+         18 +  ---
+         19 +  
+         20 +  ## 🎯 BASIC RULES & PRINCIPLES
+         21 +  
+         22 +  ### **Rule 1: One Task at a Time**
+         23 +  - Complete each numbered task fully before moving to the next
+         24 +  - Test each task before marking it complete
+         25 +  - Document any deviations or issues encountered
+         26 +  
+         27 +  ### **Rule 2: Database Safety First**
+         28 +  - Always backup database before schema changes
+         29 +  - Test migrations on development environment first
+         30 +  - Never delete data - use soft deletes (is_active flags)
+         31 +  - Always include `created_at` and `updated_at` timestamps
+         32 +  
+         33 +  ### **Rule 3: Real-Time Updates**
+         34 +  - Use Supabase Realtime for all in-app live updates
+         35 +  - Use Firebase Cloud Messaging ONLY for push notifications when app is closed
+         36 +  - Subscribe to database changes, don't poll
+         37 +  
+         38 +  ### **Rule 4: Data Flow Direction**
+         39 +  ```
+         40 +  External Source (Shopify)
+         41 +    → Supabase (single source of truth)
+         42 +      → Dashboard App (reads/writes)
+         43 +      → Flutter App (reads/writes)
+         44 +  ```
+         45 +  
+         46 +  ### **Rule 5: User Architecture**
+         47 +  - **Single user table** (`user_profiles`) for all users
+         48 +  - `user_type` field distinguishes usage context:
+         49 +    - `dashboard_employee` = Can access dashboard
+         50 +    - `flutter_consumer` = Can access Flutter app
+         51 +    - `both` = Can access both apps (e.g., agent who is also a customer)
+         52 +  - One auth.users.id per person, regardless of role
+         53 +  
+         54 +  ### **Rule 6: Error Handling**
+         55 +  - Log all errors to Supabase
+         56 +  - User-facing errors should be friendly
+         57 +  - Developer errors should be detailed
+         58 +  - Never expose sensitive data in error messages
+         59 +  
+         60 +  ### **Rule 7: Security**
+         61 +  - Row Level Security (RLS) on all tables
+         62 +  - No direct database access from frontend
+         63 +  - Use service role only in backend functions
+         64 +  - Encrypt sensitive data (tokens, passwords)
+         65 +  
+         66 +  ### **Rule 8: Code Organization**
+         67 +  - Use TypeScript for type safety
+         68 +  - Reusable components over duplicated code
+         69 +  - Clear naming conventions (camelCase for JS/TS, snake_case for SQL)
+         70 +  - Document complex business logic
+         71 +  
+         72 +  ### **Rule 9: Performance**
+         73 +  - Index frequently queried fields
+         74 +  - Use JSONB for flexible data, separate columns for queryable data
+         75 +  - Paginate large data sets
+         76 +  - Use materialized views for complex aggregations
+         77 +  
+         78 +  ### **Rule 10: Version Control**
+         79 +  - Commit after each completed task
+         80 +  - Use descriptive commit messages
+         81 +  - Never commit secrets or API keys
+         82 +  - Tag releases with version numbers
+         83 +  
+         84 +  ---
+         85 +  
+         86 +  ## 📊 CURRENT SYSTEM STATUS
+         87 +  
+         88 +  ### **✅ What's Working (Keep These)**
+         89 +  
+         90 +  #### Database Tables (Existing & Complete)
+         91 +  1. ✅ `user_profiles` - All users (dashboard + Flutter)
+         92 +  2. ✅ `companies` - Business entities
+         93 +  3. ✅ `chats` - Customer-company conversations
+         94 +  4. ✅ `messages` - Chat messages
+         95 +  5. ✅ `agent_load` - Agent workload tracking
+         96 +  6. ✅ `orders` - **EXISTS but EMPTY** (needs sync from Shopify)
+         97 +  7. ✅ `shopify_stores` - Connected Shopify stores
+         98 +  8. ✅ `shopify_customers` - Synced Shopify customers
+         99 +  9. ✅ `shopify_orders` - Synced Shopify orders
+        100 +  10. ✅ `order_fulfillments` - Shipping data
+        101 +  11. ✅ `tracking_updates` - Courier tracking events
+        102 +  12. ✅ `webhook_events` - Shopify webhook logs
+        103 +  13. ✅ `order_notifications` - Notification queue
+        104 +  
+        105 +  #### Working Integrations
+        106 +  1. ✅ Shopify OAuth connection
+        107 +  2. ✅ Shopify webhook listeners (orders, fulfillments, customers)
+        108 +  3. ✅ Courier tracking APIs (PostNL, DHL, DPD, UPS, FedEx, GLS)
+        109 +  4. ✅ Dashboard authentication (Google + Microsoft OAuth)
+        110 +  5. ✅ Flutter app authentication (Google + Microsoft OAuth)
+        111 +  6. ✅ Real-time chat (Dashboard ↔ Flutter)
+        112 +  
+        113 +  #### Working Pages
+        114 +  1. ✅ Dashboard: Chats-Supabase (100% functional)
+        115 +  2. ✅ Dashboard: Login/Register
+        116 +  3. ✅ Dashboard: Settings/Integrations
+        117 +  4. ✅ Flutter: Chat page (100% functional)
+        118 +  5. ✅ Flutter: Login/Auth
+        119 +  
+        120 +  ### **❌ What's Missing (Need to Build)**
+        121 +  
+        122 +  #### Missing Data Flows
+        123 +  1. ❌ Shopify orders → orders table (sync process)
+        124 +  2. ❌ Order notifications → Flutter app (push notifications)
+        125 +  3. ❌ Shopify customers → Beeylo users (linking mechanism)
+        126 +  
+        127 +  #### Missing Database Tables
+        128 +  1. ❌ `ticket_templates` - Message templates
+        129 +  2. ❌ `knowledge_base_themes` - KB categories
+        130 +  3. ❌ `knowledge_base_articles` - Help articles
+        131 +  4. ❌ `analytics_events` - Event tracking for analytics
+        132 +  5. ❌ `automation_rules` - Auto-assignment rules
+        133 +  6. ❌ `team_chats` - Internal team messaging
+        134 +  7. ❌ `team_chat_members` - Team chat participants
+        135 +  8. ❌ `team_messages` - Team chat messages
+        136 +  
+        137 +  #### Missing Database Fields
+        138 +  1. ❌ `chats.priority` - For urgent/high/medium/low
+        139 +  2. ❌ `chats.category` - For funnel classification
+        140 +  3. ❌ `chats.rating` - For satisfaction tracking
+        141 +  4. ❌ `chats.tags` - For categorization
+        142 +  5. ❌ `chats.closed_at` - For analytics
+        143 +  6. ❌ `agent_load.max_cases` - For workload limits
+        144 +  7. ❌ `agent_load.expertise_tags` - For smart routing
+        145 +  8. ❌ `companies.business_hours` - For settings page
+        146 +  9. ❌ `user_profiles.preferences` - For UI settings
+        147 +  10. ❌ `user_profiles.fcm_token` - For push notifications
+        148 +  
+        149 +  #### Missing Features
+        150 +  1. ❌ Push notifications (Firebase integration)
+        151 +  2. ❌ Analytics dashboard (real data)
+        152 +  3. ❌ Templates management
+        153 +  4. ❌ Knowledge base
+        154 +  5. ❌ Team internal chat
+        155 +  6. ❌ Automation rules
+        156 +  7. ❌ Beey messaging to customers
+        157 +  8. ❌ Admin chat overview
+        158 +  
+        159 +  ---
+        160 +  
+        161 +  ## 🔧 CRITICAL ARCHITECTURE DECISIONS
+        162 +  
+        163 +  ### **Decision 1: User Table Strategy**
+        164 +  
+        165 +  **Current Implementation**: ✅ **KEEP - Single table with user_type field**
+        166 +  
+        167 +  ```sql
+        168 +  -- Current schema (GOOD!)
+        169 +  user_profiles:
+        170 +    - id (references auth.users.id)
+        171 +    - role (customer, agent, company_owner, admin)
+        172 +    - user_type (dashboard_employee, flutter_consumer, both)
+        173 +    - company_id (for dashboard users)
+        174 +  ```
+        175 +  
+        176 +  **Why This Works**:
+        177 +  - One person = One auth account (auth.users)
+        178 +  - One profile record (user_profiles)
+        179 +  - Can be both employee AND consumer (user_type='both')
+        180 +  - Simplifies authentication flow
+        181 +  - No duplicate data
+        182 +  
+        183 +  **Enhancement Needed**:
+        184 +  ```sql
+        185 +  -- ADD 'both' to user_type check constraint
+        186 +  ALTER TABLE user_profiles
+        187 +  DROP CONSTRAINT IF EXISTS user_profiles_user_type_check;
+        188 +  
+        189 +  ALTER TABLE user_profiles
+        190 +  ADD CONSTRAINT user_profiles_user_type_check
+        191 +  CHECK (user_type IN ('dashboard_employee', 'flutter_consumer', 'both'));
+        192 +  ```
+        193 +  
+        194 +  **Business Logic**:
+        195 +  - If user logs into dashboard → Check if user_type IN ('dashboard_employee', 'both')
+        196 +  - If user logs into Flutter app → Check if user_type IN ('flutter_consumer', 'both')
+        197 +  - User can switch contexts without separate accounts
+        198 +  
+        199 +  ---
+        200 +  
+        201 +  ### **Decision 2: Push Notifications Strategy**
+        202 +  
+        203 +  **Question**: Can we use Supabase instead of Firebase for notifications?
+        204 +  
+        205 +  **Answer**: **Hybrid Approach** (Use both, minimize complexity)
+        206 +  
+        207 +  #### **Supabase Realtime** (Already implemented ✅)
+        208 +  - **Use For**: Real-time in-app updates when app is open
+        209 +  - **What It Does**: Live database changes
+        210 +  - **Examples**:
+        211 +    - New chat messages appear instantly
+        212 +    - Order status updates in real-time
+        213 +    - Agent assignment notifications
+        214 +  
+        215 +  #### **Firebase Cloud Messaging (FCM)** (Need to add ❌)
+        216 +  - **Use For**: Push notifications when app is closed
+        217 +  - **What It Does**: Wake up app with notification
+        218 +  - **Examples**:
+        219 +    - "New order confirmed!"
+        220 +    - "Your package has been shipped"
+        221 +    - "Agent replied to your message"
+        222 +  
+        223 +  #### **Implementation Strategy**:
+        224 +  ```
+        225 +  1. User opens Flutter app
+        226 +     ↓
+        227 +  2. App registers FCM token
+        228 +     ↓
+        229 +  3. Store token in user_profiles.fcm_token
+        230 +     ↓
+        231 +  4. When event occurs (order created, message sent):
+        232 +     ↓
+        233 +  5. Supabase Edge Function detects change
+        234 +     ↓
+        235 +  6. Edge Function sends FCM notification
+        236 +     ↓
+        237 +  7. User's device receives push notification
+        238 +     ↓
+        239 +  8. User taps notification → App opens to relevant screen
+        240 +  ```
+        241 +  
+        242 +  **Why Not Supabase-Only**:
+        243 +  - Supabase has no native push notification service
+        244 +  - Mobile OS requires FCM/APNs for push notifications
+        245 +  - But we can trigger FCM from Supabase Edge Functions!
+        246 +  
+        247 +  **Cost**: Firebase free tier = 10 million messages/month (plenty!)
+        248 +  
+        249 +  ---
+        250 +  
+        251 +  ### **Decision 3: Orders Table Data Flow**
+        252 +  
+        253 +  **Current Status**:
+        254 +  - ✅ `orders` table EXISTS in database (structure is perfect!)
+        255 +  - ❌ Table is EMPTY (0 rows)
+        256 +  - ✅ `shopify_orders` table has 7 rows (data from Shopify)
+        257 +  
+        258 +  **The Problem**: No sync process from `shopify_orders` → `orders`
+        259 +  
+        260 +  **The Solution**: Create sync function triggered by Shopify webhooks
+        261 +  
+        262 +  #### **Data Flow Design**:
+        263 +  ```
+        264 +  Shopify Order Created
+        265 +    ↓
+        266 +  Webhook → shopify_orders (INSERT) ✅ Working
+        267 +    ↓
+        268 +  Trigger → Sync Function (NEW - Task 1.2)
+        269 +    ↓
+        270 +  order_notifications (INSERT for notification queue)
+        271 +    ↓
+        272 +  orders (INSERT - transform Shopify data to Flutter format)
+        273 +    ↓
+        274 +  Supabase Edge Function (NEW - Task 1.4)
+        275 +    ↓
+        276 +  FCM Push Notification → Flutter App
+        277 +    ↓
+        278 +  Flutter App fetches orders from orders table
+        279 +  ```
+        280 +  
+        281 +  #### **Why Separate orders table**:
+        282 +  - `shopify_orders` = Raw Shopify data (all fields, Shopify format)
+        283 +  - `orders` = Clean Flutter app data (only what Flutter needs)
+        284 +  - Allows future support for non-Shopify orders (WooCommerce, manual entry, etc.)
+        285 +  - Easier to query from Flutter app
+        286 +  
+        287 +  ---
+        288 +  
+        289 +  ## 📅 PHASE-BY-PHASE IMPLEMENTATION
+        290 +  
+        291 +  ---
+        292 +  
+        293 +  ## **PHASE 1: CRITICAL PATH - Orders in Flutter App**
+        294 +  ⏱️ **Timeline**: Week 1-3
+        295 +  🎯 **Goal**: Flutter app shows order notifications from Shopify
+        296 +  🔴 **Priority**: CRITICAL - Blocking main feature
+        297 +  
+        298 +  ### **Task 1.1: Update user_profiles to Support Dual Roles**
+        299 +  **Time**: 30 minutes
+        300 +  **Files**: Database migration
+        301 +  
+        302 +  ```sql
+        303 +  -- File: migrations/001_add_both_user_type.sql
+        304 +  
+        305 +  -- Allow users to be both dashboard_employee and flutter_consumer
+        306 +  ALTER TABLE user_profiles
+        307 +  DROP CONSTRAINT IF EXISTS user_profiles_user_type_check;
+        308 +  
+        309 +  ALTER TABLE user_profiles
+        310 +  ADD CONSTRAINT user_profiles_user_type_check
+        311 +  CHECK (user_type IN ('dashboard_employee', 'flutter_consumer', 'both'));
+        312 +  
+        313 +  -- Update existing users if needed
+        314 +  -- (Review manually - don't auto-update without checking)
+        315 +  ```
+        316 +  
+        317 +  **Validation**:
+        318 +  ```sql
+        319 +  -- Test: Should succeed
+        320 +  INSERT INTO user_profiles (id, name, role, user_type)
+        321 +  VALUES (gen_random_uuid(), 'Test User', 'agent', 'both');
+        322 +  
+        323 +  -- Verify constraint
+        324 +  SELECT constraint_name, check_clause
+        325 +  FROM information_schema.check_constraints
+        326 +  WHERE constraint_name = 'user_profiles_user_type_check';
+        327 +  ```
+        328 +  
+        329 +  **Rollback**:
+        330 +  ```sql
+        331 +  ALTER TABLE user_profiles
+        332 +  DROP CONSTRAINT user_profiles_user_type_check;
+        333 +  
+        334 +  ALTER TABLE user_profiles
+        335 +  ADD CONSTRAINT user_profiles_user_type_check
+        336 +  CHECK (user_type IN ('dashboard_employee', 'flutter_consumer'));
+        337 +  ```
+        338 +  
+        339 +  ---
+        340 +  
+        341 +  ### **Task 1.2: Create Shopify → Orders Sync Function**
+        342 +  **Time**: 3-4 hours
+        343 +  **Files**: `shopify/src/services/order-sync.service.ts` (NEW)
+        344 +  
+        345 +  ```typescript
+        346 +  // File: shopify/src/services/order-sync.service.ts
+        347 +  
+        348 +  import { createClient } from '@supabase/supabase-js';
+        349 +  
+        350 +  const supabase = createClient(
+        351 +    process.env.SUPABASE_URL!,
+        352 +    process.env.SUPABASE_SERVICE_ROLE_KEY!
+        353 +  );
+        354 +  
+        355 +  export class OrderSyncService {
+        356 +    /**
+        357 +     * Sync a Shopify order to the orders table for Flutter app
+        358 +     */
+        359 +    async syncToFlutterOrders(shopifyOrderId: string) {
+        360 +      try {
+        361 +        // 1. Fetch shopify_order with customer info
+        362 +        const { data: shopifyOrder, error: fetchError } = await supabase
+        363 +          .from('shopify_orders')
+        364 +          .select(`
+        365 +            *,
+        366 +            customer:shopify_customers(
+        367 +              id,
+        368 +              beeylo_user_id,
+        369 +              email,
+        370 +              first_name,
+        371 +              last_name
+        372 +            ),
+        373 +            store:shopify_stores(
+        374 +              company_id
+        375 +            ),
+        376 +            fulfillments:order_fulfillments(
+        377 +              tracking_number,
+        378 +              tracking_company,
+        379 +              tracking_url
+        380 +            )
+        381 +          `)
+        382 +          .eq('id', shopifyOrderId)
+        383 +          .single();
+        384 +  
+        385 +        if (fetchError) throw fetchError;
+        386 +        if (!shopifyOrder) throw new Error('Order not found');
+        387 +  
+        388 +        // 2. Check if customer is linked to Beeylo user
+        389 +        const beeyloUserId = shopifyOrder.customer?.beeylo_user_id;
+        390 +  
+        391 +        if (!beeyloUserId) {
+        392 +          console.log(`Order ${shopifyOrder.order_number} customer not linked to Beeylo user yet`);
+        393 +          // Still create notification for potential future linking
+        394 +        }
+        395 +  
+        396 +        // 3. Transform Shopify order data to orders table format
+        397 +        const orderData = {
+        398 +          user_id: beeyloUserId || null,
+        399 +          company_id: shopifyOrder.store.company_id,
+        400 +          order_name: shopifyOrder.order_number,
+        401 +          order_number: shopifyOrder.order_number,
+        402 +          title: this.generateOrderTitle(shopifyOrder.line_items),
+        403 +          products: shopifyOrder.line_items, // Already JSONB
+        404 +          subject: `Order ${shopifyOrder.order_number}`,
+        405 +          tracking_number: shopifyOrder.fulfillments?.[0]?.tracking_number || null,
+        406 +          courier_name: shopifyOrder.fulfillments?.[0]?.tracking_company || null,
+        407 +          order_events: this.generateOrderEvents(shopifyOrder),
+        408 +        };
+        409 +  
+        410 +        // 4. Upsert to orders table
+        411 +        const { data: order, error: insertError } = await supabase
+        412 +          .from('orders')
+        413 +          .upsert(orderData, {
+        414 +            onConflict: 'order_number,company_id', // Prevent duplicates
+        415 +          })
+        416 +          .select()
+        417 +          .single();
+        418 +  
+        419 +        if (insertError) throw insertError;
+        420 +  
+        421 +        console.log(`✅ Synced order ${shopifyOrder.order_number} to orders table`);
+        422 +        return order;
+        423 +  
+        424 +      } catch (error) {
+        425 +        console.error('Failed to sync order to Flutter orders table:', error);
+        426 +        throw error;
+        427 +      }
+        428 +    }
+        429 +  
+        430 +    /**
+        431 +     * Generate a friendly title from line items
+        432 +     */
+        433 +    private generateOrderTitle(lineItems: any[]): string {
+        434 +      if (!lineItems || lineItems.length === 0) return 'Order';
+        435 +  
+        436 +      const itemCount = lineItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        437 +      const firstItem = lineItems[0];
+        438 +  
+        439 +      if (lineItems.length === 1) {
+        440 +        return `${firstItem.name} x${firstItem.quantity || 1}`;
+        441 +      } else {
+        442 +        return `${firstItem.name} and ${itemCount - 1} more items`;
+        443 +      }
+        444 +    }
+        445 +  
+        446 +    /**
+        447 +     * Generate order events timeline
+        448 +     */
+        449 +    private generateOrderEvents(shopifyOrder: any): any[] {
+        450 +      const events = [];
+        451 +  
+        452 +      // Order created
+        453 +      if (shopifyOrder.created_at) {
+        454 +        events.push({
+        455 +          date: shopifyOrder.created_at,
+        456 +          event: 'Order placed',
+        457 +        });
+        458 +      }
+        459 +  
+        460 +      // Payment status
+        461 +      if (shopifyOrder.financial_status === 'paid') {
+        462 +        events.push({
+        463 +          date: shopifyOrder.updated_at,
+        464 +          event: 'Payment confirmed',
+        465 +        });
+        466 +      }
+        467 +  
+        468 +      // Fulfillment status
+        469 +      if (shopifyOrder.fulfillment_status === 'fulfilled') {
+        470 +        events.push({
+        471 +          date: shopifyOrder.updated_at,
+        472 +          event: 'Order fulfilled',
+        473 +        });
+        474 +      }
+        475 +  
+        476 +      // Cancelled
+        477 +      if (shopifyOrder.cancelled_at) {
+        478 +        events.push({
+        479 +          date: shopifyOrder.cancelled_at,
+        480 +          event: 'Order cancelled',
+        481 +        });
+        482 +      }
+        483 +  
+        484 +      return events.sort((a, b) =>
+        485 +        new Date(a.date).getTime() - new Date(b.date).getTime()
+        486 +      );
+        487 +    }
+        488 +  
+        489 +    /**
+        490 +     * Sync all existing Shopify orders (one-time migration)
+        491 +     */
+        492 +    async syncAllExistingOrders() {
+        493 +      const { data: shopifyOrders } = await supabase
+        494 +        .from('shopify_orders')
+        495 +        .select('id');
+        496 +  
+        497 +      if (!shopifyOrders) return;
+        498 +  
+        499 +      console.log(`Syncing ${shopifyOrders.length} existing orders...`);
+        500 +  
+        501 +      for (const order of shopifyOrders) {
+        502 +        try {
+        503 +          await this.syncToFlutterOrders(order.id);
+        504 +        } catch (error) {
+        505 +          console.error(`Failed to sync order ${order.id}:`, error);
+        506 +        }
+        507 +      }
+        508 +  
+        509 +      console.log('✅ All existing orders synced');
+        510 +    }
+        511 +  }
+        512 +  ```
+        513 +  
+        514 +  **Integration Point** - Update NotificationService:
+        515 +  ```typescript
+        516 +  // File: shopify/src/services/notification.service.ts
+        517 +  
+        518 +  // Add import
+        519 +  import { OrderSyncService } from './order-sync.service';
+        520 +  
+        521 +  export class NotificationService {
+        522 +    private orderSyncService: OrderSyncService;
+        523 +  
+        524 +    constructor() {
+        525 +      this.orderSyncService = new OrderSyncService();
+        526 +    }
+        527 +  
+        528 +    async sendOrderConfirmation(order: any) {
+        529 +      try {
+        530 +        // 1. Sync order to Flutter orders table FIRST
+        531 +        await this.orderSyncService.syncToFlutterOrders(order.id);
+        532 +  
+        533 +        // 2. Then send notification (existing code continues...)
+        534 +        const customer = await db.supabase
+        535 +          .from('shopify_customers')
+        536 +          .select('*, beeylo_user_id')
+        537 +          .eq('id', order.customer_id)
+        538 +          .single();
+        539 +  
+        540 +        // ... rest of existing code
+        541 +      } catch (error) {
+        542 +        console.error('Failed to send order confirmation:', error);
+        543 +      }
+        544 +    }
+        545 +  
+        546 +    // Update other notification methods similarly
+        547 +    // sendShippingNotification, sendDeliveryNotification, etc.
+        548 +  }
+        549 +  ```
+        550 +  
+        551 +  **Validation**:
+        552 +  ```typescript
+        553 +  // File: shopify/src/test-order-sync.ts
+        554 +  
+        555 +  import { OrderSyncService } from './services/order-sync.service';
+        556 +  
+        557 +  async function test() {
+        558 +    const syncService = new OrderSyncService();
+        559 +  
+        560 +    // Test 1: Sync one existing order
+        561 +    console.log('Test 1: Syncing single order...');
+        562 +    await syncService.syncToFlutterOrders('existing-shopify-order-id');
+        563 +  
+        564 +    // Test 2: Sync all existing orders
+        565 +    console.log('Test 2: Syncing all orders...');
+        566 +    await syncService.syncAllExistingOrders();
+        567 +  
+        568 +    // Test 3: Verify data in orders table
+        569 +    const { data: orders } = await supabase
+        570 +      .from('orders')
+        571 +      .select('*')
+        572 +      .limit(5);
+        573 +  
+        574 +    console.log('Sample orders:', orders);
+        575 +  }
+        576 +  
+        577 +  test();
+        578 +  ```
+        579 +  
+        580 +  **Run one-time migration**:
+        581 +  ```bash
+        582 +  cd shopify
+        583 +  npx tsx src/test-order-sync.ts
+        584 +  ```
+        585 +  
+        586 +  ---
+        587 +  
+        588 +  ### **Task 1.3: Link Shopify Customers to Beeylo Users**
+        589 +  **Time**: 2-3 hours
+        590 +  **Files**: `shopify/src/services/customer-linking.service.ts` (NEW)
+        591 +  
+        592 +  ```typescript
+        593 +  // File: shopify/src/services/customer-linking.service.ts
+        594 +  
+        595 +  import { createClient } from '@supabase/supabase-js';
+        596 +  
+        597 +  const supabase = createClient(
+        598 +    process.env.SUPABASE_URL!,
+        599 +    process.env.SUPABASE_SERVICE_ROLE_KEY!
+        600 +  );
+        601 +  
+        602 +  export class CustomerLinkingService {
+        603 +    /**
+        604 +     * Automatic linking by email match
+        605 +     */
+        606 +    async autoLinkByEmail(shopifyCustomerId: string) {
+        607 +      try {
+        608 +        // 1. Get Shopify customer
+        609 +        const { data: shopifyCustomer } = await supabase
+        610 +          .from('shopify_customers')
+        611 +          .select('*')
+        612 +          .eq('id', shopifyCustomerId)
+        613 +          .single();
+        614 +  
+        615 +        if (!shopifyCustomer || shopifyCustomer.beeylo_user_id) {
+        616 +          return null; // Already linked or not found
+        617 +        }
+        618 +  
+        619 +        // 2. Find Beeylo user by email
+        620 +        const { data: beeyloUser } = await supabase
+        621 +          .from('user_profiles')
+        622 +          .select('id')
+        623 +          .eq('email', shopifyCustomer.email)
+        624 +          .eq('user_type', 'flutter_consumer') // Or 'both'
+        625 +          .single();
+        626 +  
+        627 +        if (!beeyloUser) {
+        628 +          console.log(`No Beeylo user found for email: ${shopifyCustomer.email}`);
+        629 +          return null;
+        630 +        }
+        631 +  
+        632 +        // 3. Link them!
+        633 +        const { error } = await supabase
+        634 +          .from('shopify_customers')
+        635 +          .update({ beeylo_user_id: beeyloUser.id })
+        636 +          .eq('id', shopifyCustomerId);
+        637 +  
+        638 +        if (error) throw error;
+        639 +  
+        640 +        console.log(`✅ Linked Shopify customer ${shopifyCustomer.email} to Beeylo user ${beeyloUser.id}`);
+        641 +        return beeyloUser.id;
+        642 +  
+        643 +      } catch (error) {
+        644 +        console.error('Auto-linking failed:', error);
+        645 +        return null;
+        646 +      }
+        647 +    }
+        648 +  
+        649 +    /**
+        650 +     * Manual linking (for dashboard UI)
+        651 +     */
+        652 +    async manualLink(shopifyCustomerId: string, beeyloUserId: string) {
+        653 +      const { error } = await supabase
+        654 +        .from('shopify_customers')
+        655 +        .update({ beeylo_user_id: beeyloUserId })
+        656 +        .eq('id', shopifyCustomerId);
+        657 +  
+        658 +      if (error) throw error;
+        659 +  
+        660 +      console.log(`✅ Manually linked Shopify customer to Beeylo user ${beeyloUserId}`);
+        661 +    }
+        662 +  
+        663 +    /**
+        664 +     * Bulk auto-link all unlinked customers
+        665 +     */
+        666 +    async bulkAutoLink() {
+        667 +      const { data: unlinkedCustomers } = await supabase
+        668 +        .from('shopify_customers')
+        669 +        .select('id, email')
+        670 +        .is('beeylo_user_id', null);
+        671 +  
+        672 +      if (!unlinkedCustomers) return;
+        673 +  
+        674 +      console.log(`Attempting to auto-link ${unlinkedCustomers.length} customers...`);
+        675 +  
+        676 +      let linkedCount = 0;
+        677 +      for (const customer of unlinkedCustomers) {
+        678 +        const result = await this.autoLinkByEmail(customer.id);
+        679 +        if (result) linkedCount++;
+        680 +      }
+        681 +  
+        682 +      console.log(`✅ Successfully linked ${linkedCount} of ${unlinkedCustomers.length} customers`);
+        683 +    }
+        684 +  }
+        685 +  ```
+        686 +  
+        687 +  **Add email field to user_profiles**:
+        688 +  ```sql
+        689 +  -- Migration: 002_add_email_to_user_profiles.sql
+        690 +  
+        691 +  ALTER TABLE user_profiles
+        692 +  ADD COLUMN IF NOT EXISTS email TEXT;
+        693 +  
+        694 +  CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON user_profiles(email);
+        695 +  
+        696 +  -- Populate email from auth.users
+        697 +  UPDATE user_profiles up
+        698 +  SET email = au.email
+        699 +  FROM auth.users au
+        700 +  WHERE up.id = au.id;
+        701 +  ```
+        702 +  
+        703 +  **Run bulk linking**:
+        704 +  ```bash
+        705 +  cd shopify
+        706 +  npx tsx -e "
+        707 +  import { CustomerLinkingService } from './src/services/customer-linking.service';
+        708 +  const service = new CustomerLinkingService();
+        709 +  service.bulkAutoLink();
+        710 +  "
+        711 +  ```
+        712 +  
+        713 +  ---
+        714 +  
+        715 +  ### **Task 1.4: Set Up Firebase Cloud Messaging**
+        716 +  **Time**: 4-6 hours
+        717 +  **Files**: Firebase project, Flutter app, Supabase Edge Function
+        718 +  
+        719 +  #### **Step 1: Create Firebase Project**
+        720 +  ```bash
+        721 +  # Visit: https://console.firebase.google.com
+        722 +  # 1. Click "Add Project"
+        723 +  # 2. Name: "Beeylo"
+        724 +  # 3. Enable Google Analytics (optional)
+        725 +  # 4. Add Android app (package: com.beeylo.app)
+        726 +  # 5. Download google-services.json
+        727 +  ```
+        728 +  
+        729 +  #### **Step 2: Add FCM to Flutter App**
+        730 +  ```yaml
+        731 +  # File: beeylo_new/pubspec.yaml
+        732 +  
+        733 +  dependencies:
+        734 +    firebase_core: ^3.0.0
+        735 +    firebase_messaging: ^15.0.0
+        736 +    flutter_local_notifications: ^17.0.0
+        737 +  ```
+        738 +  
+        739 +  ```dart
+        740 +  // File: beeylo_new/lib/services/fcm_service.dart
+        741 +  
+        742 +  import 'package:firebase_core/firebase_core.dart';
+        743 +  import 'package:firebase_messaging/firebase_messaging.dart';
+        744 +  import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+        745 +  import 'package:supabase_flutter/supabase_flutter.dart';
+        746 +  
+        747 +  class FCMService {
+        748 +    static final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+        749 +    static final FlutterLocalNotificationsPlugin _localNotifications =
+        750 +        FlutterLocalNotificationsPlugin();
+        751 +  
+        752 +    /// Initialize FCM
+        753 +    static Future<void> initialize() async {
+        754 +      // Request permission
+        755 +      NotificationSettings settings = await _firebaseMessaging.requestPermission(
+        756 +        alert: true,
+        757 +        badge: true,
+        758 +        sound: true,
+        759 +      );
+        760 +  
+        761 +      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        762 +        print('✅ FCM permission granted');
+        763 +  
+        764 +        // Get FCM token
+        765 +        String? token = await _firebaseMessaging.getToken();
+        766 +        if (token != null) {
+        767 +          await _saveFCMToken(token);
+        768 +        }
+        769 +  
+        770 +        // Listen for token refresh
+        771 +        _firebaseMessaging.onTokenRefresh.listen(_saveFCMToken);
+        772 +  
+        773 +        // Handle foreground messages
+        774 +        FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+        775 +  
+        776 +        // Handle background messages
+        777 +        FirebaseMessaging.onBackgroundMessage(_handleBackgroundMessage);
+        778 +      }
+        779 +    }
+        780 +  
+        781 +    /// Save FCM token to Supabase
+        782 +    static Future<void> _saveFCMToken(String token) async {
+        783 +      final user = Supabase.instance.client.auth.currentUser;
+        784 +      if (user == null) return;
+        785 +  
+        786 +      await Supabase.instance.client
+        787 +          .from('user_profiles')
+        788 +          .update({
+        789 +            'fcm_token': token,
+        790 +            'last_fcm_token_update': DateTime.now().toIso8601String(),
+        791 +          })
+        792 +          .eq('id', user.id);
+        793 +  
+        794 +      print('✅ FCM token saved to Supabase');
+        795 +    }
+        796 +  
+        797 +    /// Handle foreground notifications
+        798 +    static Future<void> _handleForegroundMessage(RemoteMessage message) async {
+        799 +      print('Received foreground notification: ${message.notification?.title}');
+        800 +  
+        801 +      // Show local notification
+        802 +      await _localNotifications.show(
+        803 +        message.hashCode,
+        804 +        message.notification?.title,
+        805 +        message.notification?.body,
+        806 +        const NotificationDetails(
+        807 +          android: AndroidNotificationDetails(
+        808 +            'beeylo_channel',
+        809 +            'Beeylo Notifications',
+        810 +            importance: Importance.high,
+        811 +            priority: Priority.high,
+        812 +          ),
+        813 +        ),
+        814 +      );
+        815 +    }
+        816 +  
+        817 +    /// Handle background notifications
+        818 +    @pragma('vm:entry-point')
+        819 +    static Future<void> _handleBackgroundMessage(RemoteMessage message) async {
+        820 +      print('Received background notification: ${message.notification?.title}');
+        821 +    }
+        822 +  }
+        823 +  ```
+        824 +  
+        825 +  ```dart
+        826 +  // File: beeylo_new/lib/main.dart
+        827 +  
+        828 +  import 'package:firebase_core/firebase_core.dart';
+        829 +  import 'services/fcm_service.dart';
+        830 +  
+        831 +  void main() async {
+        832 +    WidgetsFlutterBinding.ensureInitialized();
+        833 +  
+        834 +    // Initialize Firebase
+        835 +    await Firebase.initializeApp();
+        836 +  
+        837 +    // Initialize FCM
+        838 +    await FCMService.initialize();
+        839 +  
+        840 +    // ... rest of existing code
+        841 +    runApp(MyApp());
+        842 +  }
+        843 +  ```
+        844 +  
+        845 +  #### **Step 3: Add FCM Token Field to Database**
+        846 +  ```sql
+        847 +  -- Migration: 003_add_fcm_token.sql
+        848 +  
+        849 +  ALTER TABLE user_profiles
+        850 +  ADD COLUMN IF NOT EXISTS fcm_token TEXT,
+        851 +  ADD COLUMN IF NOT EXISTS last_fcm_token_update TIMESTAMPTZ;
+        852 +  
+        853 +  CREATE INDEX IF NOT EXISTS idx_user_profiles_fcm_token
+        854 +  ON user_profiles(fcm_token)
+        855 +  WHERE fcm_token IS NOT NULL;
+        856 +  ```
+        857 +  
+        858 +  #### **Step 4: Create Supabase Edge Function to Send Notifications**
+        859 +  ```typescript
+        860 +  // File: supabase/functions/send-push-notification/index.ts
+        861 +  
+        862 +  import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+        863 +  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+        864 +  
+        865 +  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        866 +  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        867 +  const fcmServerKey = Deno.env.get('FCM_SERVER_KEY')!;
+        868 +  
+        869 +  serve(async (req) => {
+        870 +    try {
+        871 +      const { userId, title, body, data } = await req.json();
+        872 +  
+        873 +      // 1. Get user's FCM token
+        874 +      const supabase = createClient(supabaseUrl, supabaseKey);
+        875 +      const { data: user } = await supabase
+        876 +        .from('user_profiles')
+        877 +        .select('fcm_token')
+        878 +        .eq('id', userId)
+        879 +        .single();
+        880 +  
+        881 +      if (!user?.fcm_token) {
+        882 +        return new Response(JSON.stringify({ error: 'No FCM token found' }), {
+        883 +          status: 400,
+        884 +        });
+        885 +      }
+        886 +  
+        887 +      // 2. Send FCM notification
+        888 +      const fcmResponse = await fetch('https://fcm.googleapis.com/fcm/send', {
+        889 +        method: 'POST',
+        890 +        headers: {
+        891 +          'Content-Type': 'application/json',
+        892 +          'Authorization': `key=${fcmServerKey}`,
+        893 +        },
+        894 +        body: JSON.stringify({
+        895 +          to: user.fcm_token,
+        896 +          notification: {
+        897 +            title,
+        898 +            body,
+        899 +            sound: 'default',
+        900 +          },
+        901 +          data,
+        902 +          priority: 'high',
+        903 +        }),
+        904 +      });
+        905 +  
+        906 +      const result = await fcmResponse.json();
+        907 +  
+        908 +      return new Response(JSON.stringify({ success: true, result }), {
+        909 +        status: 200,
+        910 +        headers: { 'Content-Type': 'application/json' },
+        911 +      });
+        912 +  
+        913 +    } catch (error) {
+        914 +      return new Response(JSON.stringify({ error: error.message }), {
+        915 +        status: 500,
+        916 +      });
+        917 +    }
+        918 +  });
+        919 +  ```
+        920 +  
+        921 +  **Deploy Edge Function**:
+        922 +  ```bash
+        923 +  # Install Supabase CLI
+        924 +  npm install -g supabase
+        925 +  
+        926 +  # Login
+        927 +  supabase login
+        928 +  
+        929 +  # Link project
+        930 +  supabase link --project-ref xcuvffwuyrdmufvgzczs
+        931 +  
+        932 +  # Set FCM secret
+        933 +  supabase secrets set FCM_SERVER_KEY=your-fcm-server-key
+        934 +  
+        935 +  # Deploy
+        936 +  supabase functions deploy send-push-notification
+        937 +  ```
+        938 +  
+        939 +  #### **Step 5: Trigger Push Notifications from Order Sync**
+        940 +  ```typescript
+        941 +  // File: shopify/src/services/notification.service.ts
+        942 +  
+        943 +  export class NotificationService {
+        944 +    async sendOrderConfirmation(order: any) {
+        945 +      try {
+        946 +        // ... existing code to sync order and create notification record ...
+        947 +  
+        948 +        // Send push notification via Supabase Edge Function
+        949 +        if (customer.data?.beeylo_user_id && customer.data?.fcm_token) {
+        950 +          await this.sendPushNotification({
+        951 +            userId: customer.data.beeylo_user_id,
+        952 +            title: `Order Confirmed - ${order.order_number}`,
+        953 +            body: 'Your order has been confirmed and is being prepared.',
+        954 +            data: {
+        955 +              type: 'order_confirmation',
+        956 +              order_id: order.id,
+        957 +              screen: 'OrderDetail',
+        958 +            },
+        959 +          });
+        960 +        }
+        961 +  
+        962 +      } catch (error) {
+        963 +        console.error('Failed to send order confirmation:', error);
+        964 +      }
+        965 +    }
+        966 +  
+        967 +    private async sendPushNotification(payload: any) {
+        968 +      const supabaseFunctionUrl = `${process.env.SUPABASE_URL}/functions/v1/send-push-notification`;
+        969 +  
+        970 +      const response = await fetch(supabaseFunctionUrl, {
+        971 +        method: 'POST',
+        972 +        headers: {
+        973 +          'Content-Type': 'application/json',
+        974 +          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+        975 +        },
+        976 +        body: JSON.stringify(payload),
+        977 +      });
+        978 +  
+        979 +      if (!response.ok) {
+        980 +        throw new Error('Failed to send push notification');
+        981 +      }
+        982 +  
+        983 +      console.log('✅ Push notification sent');
+        984 +    }
+        985 +  }
+        986 +  ```
+        987 +  
+        988 +  **Validation**:
+        989 +  1. Run Flutter app on physical device
+        990 +  2. Verify FCM token is saved to database
+        991 +  3. Create test Shopify order
+        992 +  4. Check device receives push notification
+        993 +  5. Tap notification → App opens to order details
+        994 +  
+        995 +  ---
+        996 +  
+        997 +  ### **Task 1.5: Update Flutter App to Fetch Orders**
+        998 +  **Time**: 2-3 hours
+        999 +  **Files**: Flutter app order fetching
+       1000 +  
+       1001 +  ```dart
+       1002 +  // File: beeylo_new/lib/data/repositories/order_repository.dart
+       1003 +  
+       1004 +  import 'package:supabase_flutter/supabase_flutter.dart';
+       1005 +  import '../models/order.dart';
+       1006 +  
+       1007 +  class OrderRepository {
+       1008 +    final SupabaseClient _supabase = Supabase.instance.client;
+       1009 +  
+       1010 +    /// Fetch user's orders
+       1011 +    Future<List<Order>> getOrders() async {
+       1012 +      final user = _supabase.auth.currentUser;
+       1013 +      if (user == null) throw Exception('Not authenticated');
+       1014 +  
+       1015 +      final response = await _supabase
+       1016 +          .from('orders')
+       1017 +          .select('*')
+       1018 +          .eq('user_id', user.id)
+       1019 +          .order('created_at', ascending: false);
+       1020 +  
+       1021 +      return (response as List)
+       1022 +          .map((json) => Order.fromJson(json))
+       1023 +          .toList();
+       1024 +    }
+       1025 +  
+       1026 +    /// Fetch single order
+       1027 +    Future<Order> getOrder(String orderId) async {
+       1028 +      final response = await _supabase
+       1029 +          .from('orders')
+       1030 +          .select('*')
+       1031 +          .eq('id', orderId)
+       1032 +          .single();
+       1033 +  
+       1034 +      return Order.fromJson(response);
+       1035 +    }
+       1036 +  
+       1037 +    /// Real-time order updates
+       1038 +    Stream<List<Order>> watchOrders() {
+       1039 +      final user = _supabase.auth.currentUser;
+       1040 +      if (user == null) throw Exception('Not authenticated');
+       1041 +  
+       1042 +      return _supabase
+       1043 +          .from('orders')
+       1044 +          .stream(primaryKey: ['id'])
+       1045 +          .eq('user_id', user.id)
+       1046 +          .order('created_at', ascending: false)
+       1047 +          .map((data) => data.map((json) => Order.fromJson(json)).toList());
+       1048 +    }
+       1049 +  }
+       1050 +  ```
+       1051 +  
+       1052 +  **Update Home Page**:
+       1053 +  ```dart
+       1054 +  // File: beeylo_new/lib/pages/home/home_page.dart
+       1055 +  
+       1056 +  import '../../data/repositories/order_repository.dart';
+       1057 +  
+       1058 +  class HomePage extends StatefulWidget {
+       1059 +    @override
+       1060 +    _HomePageState createState() => _HomePageState();
+       1061 +  }
+       1062 +  
+       1063 +  class _HomePageState extends State<HomePage> {
+       1064 +    final OrderRepository _orderRepo = OrderRepository();
+       1065 +    late Stream<List<Order>> _ordersStream;
+       1066 +  
+       1067 +    @override
+       1068 +    void initState() {
+       1069 +      super.initState();
+       1070 +      _ordersStream = _orderRepo.watchOrders();
+       1071 +    }
+       1072 +  
+       1073 +    @override
+       1074 +    Widget build(BuildContext context) {
+       1075 +      return Scaffold(
+       1076 +        body: StreamBuilder<List<Order>>(
+       1077 +          stream: _ordersStream,
+       1078 +          builder: (context, snapshot) {
+       1079 +            if (snapshot.connectionState == ConnectionState.waiting) {
+       1080 +              return CircularProgressIndicator();
+       1081 +            }
+       1082 +  
+       1083 +            if (snapshot.hasError) {
+       1084 +              return Text('Error: ${snapshot.error}');
+       1085 +            }
+       1086 +  
+       1087 +            final orders = snapshot.data ?? [];
+       1088 +  
+       1089 +            if (orders.isEmpty) {
+       1090 +              return Center(child: Text('No orders yet'));
+       1091 +            }
+       1092 +  
+       1093 +            return ListView.builder(
+       1094 +              itemCount: orders.length,
+       1095 +              itemBuilder: (context, index) {
+       1096 +                final order = orders[index];
+       1097 +                return OrderCard(order: order);
+       1098 +              },
+       1099 +            );
+       1100 +          },
+       1101 +        ),
+       1102 +      );
+       1103 +    }
+       1104 +  }
+       1105 +  ```
+       1106 +  
+       1107 +  **Validation**:
+       1108 +  1. Open Flutter app
+       1109 +  2. Verify orders from database are displayed
+       1110 +  3. Create new Shopify order
+       1111 +  4. Check order appears in Flutter app (via real-time update)
+       1112 +  5. Tap order → Details screen shows all order info
+       1113 +  
+       1114 +  ---
+       1115 +  
+       1116 +  ### **✅ Phase 1 Complete Checklist**
+       1117 +  
+       1118 +  - [ ] Task 1.1: user_profiles supports 'both' user_type
+       1119 +  - [ ] Task 1.2: OrderSyncService created and tested
+       1120 +  - [ ] Task 1.3: Customer linking implemented (auto + manual)
+       1121 +  - [ ] Task 1.4: Firebase FCM integrated and tested
+       1122 +  - [ ] Task 1.5: Flutter app fetches and displays orders
+       1123 +  
+       1124 +  **Success Criteria**:
+       1125 +  - ✅ Shopify order created → Syncs to orders table within 5 seconds
+       1126 +  - ✅ Flutter app user receives push notification
+       1127 +  - ✅ Orders appear in Flutter app home page
+       1128 +  - ✅ Real-time updates work when order status changes
+       1129 +  - ✅ At least 1 Shopify customer linked to Beeylo user
+       1130 +  
+       1131 +  ---
+       1132 +  
+       1133 +  ## **PHASE 2: Analytics & Reporting Foundation**
+       1134 +  ⏱️ **Timeline**: Week 4-5
+       1135 +  🎯 **Goal**: Dashboard shows real analytics data
+       1136 +  🟠 **Priority**: HIGH - Needed for business insights
+       1137 +  
+       1138 +  ### **Task 2.1: Add Missing Fields to chats Table**
+       1139 +  **Time**: 1 hour
+       1140 +  
+       1141 +  ```sql
+       1142 +  -- Migration: 004_enhance_chats_table.sql
+       1143 +  
+       1144 +  ALTER TABLE chats
+       1145 +    ADD COLUMN IF NOT EXISTS priority TEXT DEFAULT 'medium'
+       1146 +      CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+       1147 +    ADD COLUMN IF NOT EXISTS category TEXT
+       1148 +      CHECK (category IN ('resolve', 'retention', 'upsell', 'proactive', 'other')),
+       1149 +    ADD COLUMN IF NOT EXISTS rating INTEGER
+       1150 +      CHECK (rating >= 1 AND rating <= 5),
+       1151 +    ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}',
+       1152 +    ADD COLUMN IF NOT EXISTS closed_at TIMESTAMPTZ;
+       1153 +  
+       1154 +  CREATE INDEX IF NOT EXISTS idx_chats_priority ON chats(priority);
+       1155 +  CREATE INDEX IF NOT EXISTS idx_chats_category ON chats(category);
+       1156 +  CREATE INDEX IF NOT EXISTS idx_chats_rating ON chats(rating);
+       1157 +  CREATE INDEX IF NOT EXISTS idx_chats_closed_at ON chats(closed_at) WHERE closed_at IS NOT NULL;
+       1158 +  CREATE INDEX IF NOT EXISTS idx_chats_tags ON chats USING GIN(tags);
+       1159 +  
+       1160 +  -- Auto-set closed_at when status changes to 'closed'
+       1161 +  CREATE OR REPLACE FUNCTION set_chat_closed_at()
+       1162 +  RETURNS TRIGGER AS $$
+       1163 +  BEGIN
+       1164 +    IF NEW.status = 'closed' AND OLD.status != 'closed' THEN
+       1165 +      NEW.closed_at = NOW();
+       1166 +    END IF;
+       1167 +  
+       1168 +    IF NEW.status != 'closed' THEN
+       1169 +      NEW.closed_at = NULL;
+       1170 +    END IF;
+       1171 +  
+       1172 +    RETURN NEW;
+       1173 +  END;
+       1174 +  $$ LANGUAGE plpgsql;
+       1175 +  
+       1176 +  CREATE TRIGGER trigger_set_chat_closed_at
+       1177 +    BEFORE UPDATE ON chats
+       1178 +    FOR EACH ROW
+       1179 +    EXECUTE FUNCTION set_chat_closed_at();
+       1180 +  ```
+       1181 +  
+       1182 +  ---
+       1183 +  
+       1184 +  ### **Task 2.2: Create analytics_events Table**
+       1185 +  **Time**: 2 hours
+       1186 +  
+       1187 +  ```sql
+       1188 +  -- Migration: 005_create_analytics_events.sql
+       1189 +  
+       1190 +  CREATE TABLE IF NOT EXISTS analytics_events (
+       1191 +    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+       1192 +    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+       1193 +    event_type TEXT NOT NULL,
+       1194 +    entity_id UUID,
+       1195 +    user_id UUID REFERENCES user_profiles(id) ON DELETE SET NULL,
+       1196 +    metadata JSONB DEFAULT '{}',
+       1197 +    created_at TIMESTAMPTZ DEFAULT NOW()
+       1198 +  );
+       1199 +  
+       1200 +  CREATE INDEX idx_analytics_events_company_id ON analytics_events(company_id);
+       1201 +  CREATE INDEX idx_analytics_events_event_type ON analytics_events(event_type);
+       1202 +  CREATE INDEX idx_analytics_events_created_at ON analytics_events(created_at DESC);
+       1203 +  CREATE INDEX idx_analytics_events_user_id ON analytics_events(user_id);
+       1204 +  
+       1205 +  -- Enable RLS
+       1206 +  ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
+       1207 +  
+       1208 +  -- RLS Policy: Users can see their company's events
+       1209 +  CREATE POLICY analytics_events_company_policy ON analytics_events
+       1210 +    FOR SELECT
+       1211 +    USING (company_id IN (
+       1212 +      SELECT company_id FROM user_profiles WHERE id = auth.uid()
+       1213 +    ));
+       1214 +  
+       1215 +  -- Service role can insert events
+       1216 +  CREATE POLICY analytics_events_service_role ON analytics_events
+       1217 +    FOR ALL
+       1218 +    TO service_role
+       1219 +    USING (true);
+       1220 +  ```
+       1221 +  
+       1222 +  ---
+       1223 +  
+       1224 +  ### **Task 2.3: Add Event Logging Throughout System**
+       1225 +  **Time**: 3-4 hours
+       1226 +  **Files**: Multiple hooks and services
+       1227 +  
+       1228 +  **Event Types**:
+       1229 +  - `chat_created` - New chat started
+       1230 +  - `chat_assigned` - Agent assigned to chat
+       1231 +  - `chat_resolved` - Chat closed by agent
+       1232 +  - `message_sent` - Message sent (customer or agent)
+       1233 +  - `first_response` - First agent response (for response time tracking)
+       1234 +  - `template_used` - Message template used
+       1235 +  - `order_created` - Order synced from Shopify
+       1236 +  
+       1237 +  ```typescript
+       1238 +  // File: dashboardapp/src/lib/analytics.ts (NEW)
+       1239 +  
+       1240 +  import { supabase } from './supabase';
+       1241 +  
+       1242 +  export async function trackEvent(
+       1243 +    eventType: string,
+       1244 +    companyId: string,
+       1245 +    entityId?: string,
+       1246 +    userId?: string,
+       1247 +    metadata?: Record<string, any>
+       1248 +  ) {
+       1249 +    try {
+       1250 +      await supabase.from('analytics_events').insert({
+       1251 +        company_id: companyId,
+       1252 +        event_type: eventType,
+       1253 +        entity_id: entityId,
+       1254 +        user_id: userId,
+       1255 +        metadata,
+       1256 +      });
+       1257 +    } catch (error) {
+       1258 +      console.error('Failed to track event:', error);
+       1259 +    }
+       1260 +  }
+       1261 +  ```
+       1262 +  
+       1263 +  **Add to chat creation**:
+       1264 +  ```typescript
+       1265 +  // File: dashboardapp/src/hooks/useChatActions.ts
+       1266 +  
+       1267 +  export function useChatActions() {
+       1268 +    const createChat = async (customerId: string, companyId: string, subject: string) => {
+       1269 +      const { data: chat } = await supabase
+       1270 +        .from('chats')
+       1271 +        .insert({ customer_id: customerId, company_id: companyId, subject })
+       1272 +        .select()
+       1273 +        .single();
+       1274 +  
+       1275 +      // Track event
+       1276 +      await trackEvent('chat_created', companyId, chat.id, customerId);
+       1277 +  
+       1278 +      return chat;
+       1279 +    };
+       1280 +  
+       1281 +    // ... rest of hooks
+       1282 +  }
+       1283 +  ```
+       1284 +  
+       1285 +  **Add to message sending**:
+       1286 +  ```typescript
+       1287 +  // File: dashboardapp/src/hooks/useChatActions.ts
+       1288 +  
+       1289 +  export function useChatActions() {
+       1290 +    const sendMessage = async (chatId: string, content: string) => {
+       1291 +      const user = supabase.auth.user();
+       1292 +  
+       1293 +      // Insert message
+       1294 +      const { data: message } = await supabase
+       1295 +        .from('messages')
+       1296 +        .insert({ chat_id: chatId, sender_id: user.id, content })
+       1297 +        .select()
+       1298 +        .single();
+       1299 +  
+       1300 +      // Get chat to check if this is first agent response
+       1301 +      const { data: chat } = await supabase
+       1302 +        .from('chats')
+       1303 +        .select('*, messages!inner(id, sender_id)')
+       1304 +        .eq('id', chatId)
+       1305 +        .single();
+       1306 +  
+       1307 +      const agentMessages = chat.messages.filter(m =>
+       1308 +        m.sender_id !== chat.customer_id
+       1309 +      );
+       1310 +  
+       1311 +      if (agentMessages.length === 1) {
+       1312 +        // This is first agent response - track response time
+       1313 +        const responseTimeSeconds =
+       1314 +          (new Date(message.created_at).getTime() - new Date(chat.created_at).getTime()) / 1000;
+       1315 +  
+       1316 +        await trackEvent('first_response', chat.company_id, chat.id, user.id, {
+       1317 +          response_time_seconds: responseTimeSeconds,
+       1318 +        });
+       1319 +      }
+       1320 +  
+       1321 +      // Track message sent
+       1322 +      await trackEvent('message_sent', chat.company_id, message.id, user.id);
+       1323 +  
+       1324 +      return message;
+       1325 +    };
+       1326 +  }
+       1327 +  ```
+       1328 +  
+       1329 +  ---
+       1330 +  
+       1331 +  ### **Task 2.4: Create Analytics Query Functions**
+       1332 +  **Time**: 4-5 hours
+       1333 +  **Files**: Dashboard hooks
+       1334 +  
+       1335 +  ```typescript
+       1336 +  // File: dashboardapp/src/hooks/useAnalytics.ts (NEW)
+       1337 +  
+       1338 +  import { useState, useEffect } from 'react';
+       1339 +  import { supabase } from '../lib/supabase';
+       1340 +  
+       1341 +  export function useAnalytics(companyId: string, dateRange: { start: Date; end: Date }) {
+       1342 +    const [loading, setLoading] = useState(true);
+       1343 +    const [data, setData] = useState<any>(null);
+       1344 +  
+       1345 +    useEffect(() => {
+       1346 +      fetchAnalytics();
+       1347 +    }, [companyId, dateRange]);
+       1348 +  
+       1349 +    async function fetchAnalytics() {
+       1350 +      setLoading(true);
+       1351 +  
+       1352 +      try {
+       1353 +        // Conversation Volume
+       1354 +        const { data: volumeData } = await supabase
+       1355 +          .from('chats')
+       1356 +          .select('created_at')
+       1357 +          .eq('company_id', companyId)
+       1358 +          .gte('created_at', dateRange.start.toISOString())
+       1359 +          .lte('created_at', dateRange.end.toISOString());
+       1360 +  
+       1361 +        // Average Response Time
+       1362 +        const { data: responseTimeData } = await supabase
+       1363 +          .from('analytics_events')
+       1364 +          .select('metadata')
+       1365 +          .eq('company_id', companyId)
+       1366 +          .eq('event_type', 'first_response')
+       1367 +          .gte('created_at', dateRange.start.toISOString())
+       1368 +          .lte('created_at', dateRange.end.toISOString());
+       1369 +  
+       1370 +        const avgResponseTime = responseTimeData
+       1371 +          ? responseTimeData.reduce((sum, e) =>
+       1372 +              sum + (e.metadata.response_time_seconds || 0), 0) / responseTimeData.length
+       1373 +          : 0;
+       1374 +  
+       1375 +        // Customer Satisfaction
+       1376 +        const { data: satisfactionData } = await supabase
+       1377 +          .from('chats')
+       1378 +          .select('rating')
+       1379 +          .eq('company_id', companyId)
+       1380 +          .not('rating', 'is', null)
+       1381 +          .gte('closed_at', dateRange.start.toISOString())
+       1382 +          .lte('closed_at', dateRange.end.toISOString());
+       1383 +  
+       1384 +        const avgSatisfaction = satisfactionData
+       1385 +          ? satisfactionData.reduce((sum, c) => sum + (c.rating || 0), 0) / satisfactionData.length
+       1386 +          : 0;
+       1387 +  
+       1388 +        // Team Performance
+       1389 +        const { data: teamPerformance } = await supabase.rpc('get_team_performance', {
+       1390 +          p_company_id: companyId,
+       1391 +          p_start_date: dateRange.start.toISOString(),
+       1392 +          p_end_date: dateRange.end.toISOString(),
+       1393 +        });
+       1394 +  
+       1395 +        setData({
+       1396 +          conversationVolume: volumeData?.length || 0,
+       1397 +          avgResponseTime,
+       1398 +          avgSatisfaction,
+       1399 +          teamPerformance,
+       1400 +        });
+       1401 +  
+       1402 +      } catch (error) {
+       1403 +        console.error('Failed to fetch analytics:', error);
+       1404 +      } finally {
+       1405 +        setLoading(false);
+       1406 +      }
+       1407 +    }
+       1408 +  
+       1409 +    return { data, loading, refetch: fetchAnalytics };
+       1410 +  }
+       1411 +  ```
+       1412 +  
+       1413 +  **Create database function for team performance**:
+       1414 +  ```sql
+       1415 +  -- Migration: 006_analytics_functions.sql
+       1416 +  
+       1417 +  CREATE OR REPLACE FUNCTION get_team_performance(
+       1418 +    p_company_id UUID,
+       1419 +    p_start_date TIMESTAMPTZ,
+       1420 +    p_end_date TIMESTAMPTZ
+       1421 +  )
+       1422 +  RETURNS TABLE (
+       1423 +    agent_id UUID,
+       1424 +    agent_name TEXT,
+       1425 +    chats_handled BIGINT,
+       1426 +    avg_response_time NUMERIC,
+       1427 +    avg_rating NUMERIC
+       1428 +  ) AS $$
+       1429 +  BEGIN
+       1430 +    RETURN QUERY
+       1431 +    SELECT
+       1432 +      c.agent_id,
+       1433 +      up.name as agent_name,
+       1434 +      COUNT(DISTINCT c.id) as chats_handled,
+       1435 +      AVG((ae.metadata->>'response_time_seconds')::NUMERIC) as avg_response_time,
+       1436 +      AVG(c.rating) as avg_rating
+       1437 +    FROM chats c
+       1438 +    LEFT JOIN user_profiles up ON c.agent_id = up.id
+       1439 +    LEFT JOIN analytics_events ae ON ae.entity_id = c.id AND ae.event_type = 'first_response'
+       1440 +    WHERE c.company_id = p_company_id
+       1441 +      AND c.created_at >= p_start_date
+       1442 +      AND c.created_at <= p_end_date
+       1443 +      AND c.agent_id IS NOT NULL
+       1444 +    GROUP BY c.agent_id, up.name
+       1445 +    ORDER BY chats_handled DESC;
+       1446 +  END;
+       1447 +  $$ LANGUAGE plpgsql;
+       1448 +  ```
+       1449 +  
+       1450 +  ---
+       1451 +  
+       1452 +  ### **Task 2.5: Update Analytics Page to Use Real Data**
+       1453 +  **Time**: 3-4 hours
+       1454 +  **Files**: `dashboardapp/src/app/analytics/page.tsx`
+       1455 +  
+       1456 +  ```typescript
+       1457 +  // File: dashboardapp/src/app/analytics/page.tsx
+       1458 +  
+       1459 +  'use client';
+       1460 +  
+       1461 +  import { useState } from 'react';
+       1462 +  import { useAnalytics } from '../../hooks/useAnalytics';
+       1463 +  import { useAuth } from '../../contexts/AuthContext';
+       1464 +  
+       1465 +  export default function AnalyticsPage() {
+       1466 +    const { company } = useAuth();
+       1467 +    const [dateRange, setDateRange] = useState({
+       1468 +      start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+       1469 +      end: new Date(),
+       1470 +    });
+       1471 +  
+       1472 +    const { data, loading } = useAnalytics(company?.id || '', dateRange);
+       1473 +  
+       1474 +    if (loading) {
+       1475 +      return <div>Loading analytics...</div>;
+       1476 +    }
+       1477 +  
+       1478 +    return (
+       1479 +      <div className="p-6">
+       1480 +        <h1 className="text-2xl font-bold mb-6">Analytics</h1>
+       1481 +  
+       1482 +        {/* KPI Cards */}
+       1483 +        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+       1484 +          <div className="bg-white rounded-lg shadow p-6">
+       1485 +            <h3 className="text-sm text-gray-600 mb-2">Conversation Volume</h3>
+       1486 +            <p className="text-3xl font-bold">{data?.conversationVolume || 0}</p>
+       1487 +          </div>
+       1488 +  
+       1489 +          <div className="bg-white rounded-lg shadow p-6">
+       1490 +            <h3 className="text-sm text-gray-600 mb-2">Avg Response Time</h3>
+       1491 +            <p className="text-3xl font-bold">
+       1492 +              {Math.round(data?.avgResponseTime / 60) || 0}m
+       1493 +            </p>
+       1494 +          </div>
+       1495 +  
+       1496 +          <div className="bg-white rounded-lg shadow p-6">
+       1497 +            <h3 className="text-sm text-gray-600 mb-2">Customer Satisfaction</h3>
+       1498 +            <p className="text-3xl font-bold">
+       1499 +              {data?.avgSatisfaction?.toFixed(1) || 0} ⭐
+       1500 +            </p>
+       1501 +          </div>
+       1502 +        </div>
+       1503 +  
+       1504 +        {/* Team Performance */}
+       1505 +        <div className="bg-white rounded-lg shadow p-6">
+       1506 +          <h2 className="text-xl font-bold mb-4">Team Performance</h2>
+       1507 +          <table className="w-full">
+       1508 +            <thead>
+       1509 +              <tr className="border-b">
+       1510 +                <th className="text-left py-2">Agent</th>
+       1511 +                <th className="text-right py-2">Chats Handled</th>
+       1512 +                <th className="text-right py-2">Avg Response</th>
+       1513 +                <th className="text-right py-2">Avg Rating</th>
+       1514 +              </tr>
+       1515 +            </thead>
+       1516 +            <tbody>
+       1517 +              {data?.teamPerformance?.map((agent: any) => (
+       1518 +                <tr key={agent.agent_id} className="border-b">
+       1519 +                  <td className="py-2">{agent.agent_name}</td>
+       1520 +                  <td className="text-right">{agent.chats_handled}</td>
+       1521 +                  <td className="text-right">
+       1522 +                    {Math.round(agent.avg_response_time / 60)}m
+       1523 +                  </td>
+       1524 +                  <td className="text-right">{agent.avg_rating?.toFixed(1) || 'N/A'}</td>
+       1525 +                </tr>
+       1526 +              ))}
+       1527 +            </tbody>
+       1528 +          </table>
+       1529 +        </div>
+       1530 +      </div>
+       1531 +    );
+       1532 +  }
+       1533 +  ```
+       1534 +  
+       1535 +  ---
+       1536 +  
+       1537 +  ### **✅ Phase 2 Complete Checklist**
+       1538 +  
+       1539 +  - [ ] Task 2.1: chats table enhanced with priority, rating, category, tags
+       1540 +  - [ ] Task 2.2: analytics_events table created
+       1541 +  - [ ] Task 2.3: Event logging added to all key actions
+       1542 +  - [ ] Task 2.4: Analytics query functions created
+       1543 +  - [ ] Task 2.5: Analytics page shows real data
+       1544 +  
+       1545 +  **Success Criteria**:
+       1546 +  - ✅ Analytics page shows real conversation volume
+       1547 +  - ✅ Average response time calculated from events
+       1548 +  - ✅ Customer satisfaction from chat ratings
+       1549 +  - ✅ Team performance table shows real agent data
+       1550 +  - ✅ No more mock JSON files in analytics
+       1551 +  
+       1552 +  ---
+       1553 +  
+       1554 +  ## **PHASE 3: Templates & Settings Enhancement**
+       1555 +  ⏱️ **Timeline**: Week 6
+       1556 +  🎯 **Goal**: Templates and Settings fully functional
+       1557 +  🟡 **Priority**: MEDIUM - Improves workflow efficiency
+       1558 +  
+       1559 +  ### **Task 3.1: Create ticket_templates Table**
+       1560 +  **Time**: 1 hour
+       1561 +  
+       1562 +  ```sql
+       1563 +  -- Migration: 007_create_ticket_templates.sql
+       1564 +  
+       1565 +  CREATE TABLE IF NOT EXISTS ticket_templates (
+       1566 +    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+       1567 +    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+       1568 +    name TEXT NOT NULL,
+       1569 +    description TEXT,
+       1570 +    content TEXT NOT NULL,
+       1571 +    category TEXT,
+       1572 +    is_active BOOLEAN DEFAULT true,
+       1573 +    usage_count INTEGER DEFAULT 0,
+       1574 +    created_by UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+       1575 +    created_at TIMESTAMPTZ DEFAULT NOW(),
+       1576 +    updated_at TIMESTAMPTZ DEFAULT NOW()
+       1577 +  );
+       1578 +  
+       1579 +  CREATE INDEX idx_ticket_templates_company_id ON ticket_templates(company_id);
+       1580 +  CREATE INDEX idx_ticket_templates_category ON ticket_templates(category);
+       1581 +  CREATE INDEX idx_ticket_templates_is_active ON ticket_templates(is_active);
+       1582 +  
+       1583 +  -- Enable RLS
+       1584 +  ALTER TABLE ticket_templates ENABLE ROW LEVEL SECURITY;
+       1585 +  
+       1586 +  -- RLS Policy
+       1587 +  CREATE POLICY ticket_templates_company_policy ON ticket_templates
+       1588 +    FOR ALL
+       1589 +    USING (company_id IN (
+       1590 +      SELECT company_id FROM user_profiles WHERE id = auth.uid()
+       1591 +    ));
+       1592 +  
+       1593 +  -- Trigger for updated_at
+       1594 +  CREATE TRIGGER update_ticket_templates_updated_at
+       1595 +    BEFORE UPDATE ON ticket_templates
+       1596 +    FOR EACH ROW
+       1597 +    EXECUTE FUNCTION update_updated_at_column();
+       1598 +  ```
+       1599 +  
+       1600 +  ---
+       1601 +  
+       1602 +  ### **Task 3.2: Build Templates Management Hooks**
+       1603 +  **Time**: 2-3 hours
+       1604 +  
+       1605 +  ```typescript
+       1606 +  // File: dashboardapp/src/hooks/useTemplates.ts (NEW)
+       1607 +  
+       1608 +  import { useState, useEffect } from 'react';
+       1609 +  import { supabase } from '../lib/supabase';
+       1610 +  
+       1611 +  interface Template {
+       1612 +    id: string;
+       1613 +    name: string;
+       1614 +    description?: string;
+       1615 +    content: string;
+       1616 +    category?: string;
+       1617 +    usage_count: number;
+       1618 +    created_at: string;
+       1619 +  }
+       1620 +  
+       1621 +  export function useTemplates(companyId: string) {
+       1622 +    const [templates, setTemplates] = useState<Template[]>([]);
+       1623 +    const [loading, setLoading] = useState(true);
+       1624 +  
+       1625 +    useEffect(() => {
+       1626 +      fetchTemplates();
+       1627 +    }, [companyId]);
+       1628 +  
+       1629 +    async function fetchTemplates() {
+       1630 +      const { data } = await supabase
+       1631 +        .from('ticket_templates')
+       1632 +        .select('*')
+       1633 +        .eq('company_id', companyId)
+       1634 +        .eq('is_active', true)
+       1635 +        .order('usage_count', { ascending: false });
+       1636 +  
+       1637 +      setTemplates(data || []);
+       1638 +      setLoading(false);
+       1639 +    }
+       1640 +  
+       1641 +    async function createTemplate(template: Omit<Template, 'id' | 'usage_count' | 'created_at'>) {
+       1642 +      const user = supabase.auth.user();
+       1643 +  
+       1644 +      const { data, error } = await supabase
+       1645 +        .from('ticket_templates')
+       1646 +        .insert({
+       1647 +          ...template,
+       1648 +          company_id: companyId,
+       1649 +          created_by: user?.id,
+       1650 +        })
+       1651 +        .select()
+       1652 +        .single();
+       1653 +  
+       1654 +      if (error) throw error;
+       1655 +  
+       1656 +      setTemplates([...templates, data]);
+       1657 +      return data;
+       1658 +    }
+       1659 +  
+       1660 +    async function updateTemplate(id: string, updates: Partial<Template>) {
+       1661 +      const { data, error } = await supabase
+       1662 +        .from('ticket_templates')
+       1663 +        .update(updates)
+       1664 +        .eq('id', id)
+       1665 +        .select()
+       1666 +        .single();
+       1667 +  
+       1668 +      if (error) throw error;
+       1669 +  
+       1670 +      setTemplates(templates.map(t => t.id === id ? data : t));
+       1671 +      return data;
+       1672 +    }
+       1673 +  
+       1674 +    async function deleteTemplate(id: string) {
+       1675 +      const { error } = await supabase
+       1676 +        .from('ticket_templates')
+       1677 +        .update({ is_active: false })
+       1678 +        .eq('id', id);
+       1679 +  
+       1680 +      if (error) throw error;
+       1681 +  
+       1682 +      setTemplates(templates.filter(t => t.id !== id));
+       1683 +    }
+       1684 +  
+       1685 +    async function useTemplate(id: string) {
+       1686 +      // Increment usage count
+       1687 +      await supabase.rpc('increment_template_usage', { template_id: id });
+       1688 +  
+       1689 +      // Track analytics event
+       1690 +      await trackEvent('template_used', companyId, id);
+       1691 +  
+       1692 +      // Refetch to update usage count
+       1693 +      fetchTemplates();
+       1694 +    }
+       1695 +  
+       1696 +    return {
+       1697 +      templates,
+       1698 +      loading,
+       1699 +      createTemplate,
+       1700 +      updateTemplate,
+       1701 +      deleteTemplate,
+       1702 +      useTemplate,
+       1703 +      refetch: fetchTemplates,
+       1704 +    };
+       1705 +  }
+       1706 +  ```
+       1707 +  
+       1708 +  **Database function for usage increment**:
+       1709 +  ```sql
+       1710 +  -- Migration: 008_template_functions.sql
+       1711 +  
+       1712 +  CREATE OR REPLACE FUNCTION increment_template_usage(template_id UUID)
+       1713 +  RETURNS void AS $$
+       1714 +  BEGIN
+       1715 +    UPDATE ticket_templates
+       1716 +    SET usage_count = usage_count + 1
+       1717 +    WHERE id = template_id;
+       1718 +  END;
+       1719 +  $$ LANGUAGE plpgsql;
+       1720 +  ```
+       1721 +  
+       1722 +  ---
+       1723 +  
+       1724 +  ### **Task 3.3: Update Templates Page**
+       1725 +  **Time**: 2 hours
+       1726 +  
+       1727 +  ```typescript
+       1728 +  // File: dashboardapp/src/app/templates/page.tsx
+       1729 +  
+       1730 +  'use client';
+       1731 +  
+       1732 +  import { useTemplates } from '../../hooks/useTemplates';
+       1733 +  import { useAuth } from '../../contexts/AuthContext';
+       1734 +  import { useState } from 'react';
+       1735 +  
+       1736 +  export default function TemplatesPage() {
+       1737 +    const { company } = useAuth();
+       1738 +    const { templates, createTemplate, updateTemplate, deleteTemplate } = useTemplates(company?.id || '');
+       1739 +    const [isCreating, setIsCreating] = useState(false);
+       1740 +    const [editingTemplate, setEditingTemplate] = useState<any>(null);
+       1741 +  
+       1742 +    // Move localStorage templates to database (one-time migration)
+       1743 +    useEffect(() => {
+       1744 +      const localTemplates = localStorage.getItem('templates');
+       1745 +      if (localTemplates) {
+       1746 +        const parsed = JSON.parse(localTemplates);
+       1747 +        // Migrate each template
+       1748 +        parsed.forEach((template: any) => {
+       1749 +          createTemplate({
+       1750 +            name: template.name,
+       1751 +            description: template.description,
+       1752 +            content: template.content,
+       1753 +            category: template.category,
+       1754 +          });
+       1755 +        });
+       1756 +        localStorage.removeItem('templates'); // Clear after migration
+       1757 +      }
+       1758 +    }, []);
+       1759 +  
+       1760 +    // ... rest of UI implementation
+       1761 +  }
+       1762 +  ```
+       1763 +  
+       1764 +  ---
+       1765 +  
+       1766 +  ### **Task 3.4: Enhance Settings Tables**
+       1767 +  **Time**: 1-2 hours
+       1768 +  
+       1769 +  ```sql
+       1770 +  -- Migration: 009_enhance_settings_tables.sql
+       1771 +  
+       1772 +  -- Add missing fields to agent_load
+       1773 +  ALTER TABLE agent_load
+       1774 +    ADD COLUMN IF NOT EXISTS max_cases INTEGER DEFAULT 10,
+       1775 +    ADD COLUMN IF NOT EXISTS expertise_tags TEXT[] DEFAULT '{}';
+       1776 +  
+       1777 +  CREATE INDEX IF NOT EXISTS idx_agent_load_expertise_tags
+       1778 +  ON agent_load USING GIN(expertise_tags);
+       1779 +  
+       1780 +  -- Add missing fields to companies
+       1781 +  ALTER TABLE companies
+       1782 +    ADD COLUMN IF NOT EXISTS business_hours JSONB DEFAULT '{
+       1783 +      "monday": {"open": "09:00", "close": "17:00", "enabled": true},
+       1784 +      "tuesday": {"open": "09:00", "close": "17:00", "enabled": true},
+       1785 +      "wednesday": {"open": "09:00", "close": "17:00", "enabled": true},
+       1786 +      "thursday": {"open": "09:00", "close": "17:00", "enabled": true},
+       1787 +      "friday": {"open": "09:00", "close": "17:00", "enabled": true},
+       1788 +      "saturday": {"enabled": false},
+       1789 +      "sunday": {"enabled": false}
+       1790 +    }'::jsonb,
+       1791 +    ADD COLUMN IF NOT EXISTS subscription_tier TEXT DEFAULT 'free';
+       1792 +  
+       1793 +  -- Add missing fields to user_profiles
+       1794 +  ALTER TABLE user_profiles
+       1795 +    ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{
+       1796 +      "menu_position": "left",
+       1797 +      "content_scale": 1.0,
+       1798 +      "theme": "light"
+       1799 +    }'::jsonb;
+       1800 +  ```
+       1801 +  
+       1802 +  ---
+       1803 +  
+       1804 +  ### **Task 3.5: Update Settings Page**
+       1805 +  **Time**: 3 hours
+       1806 +  
+       1807 +  ```typescript
+       1808 +  // File: dashboardapp/src/app/settings/page.tsx
+       1809 +  
+       1810 +  'use client';
+       1811 +  
+       1812 +  import { useState, useEffect } from 'react';
+       1813 +  import { supabase } from '../../lib/supabase';
+       1814 +  import { useAuth } from '../../contexts/AuthContext';
+       1815 +  
+       1816 +  export default function SettingsPage() {
+       1817 +    const { company, user } = useAuth();
+       1818 +    const [businessHours, setBusinessHours] = useState<any>(null);
+       1819 +    const [teamMembers, setTeamMembers] = useState<any[]>([]);
+       1820 +  
+       1821 +    useEffect(() => {
+       1822 +      fetchCompanySettings();
+       1823 +      fetchTeamMembers();
+       1824 +    }, [company]);
+       1825 +  
+       1826 +    async function fetchCompanySettings() {
+       1827 +      const { data } = await supabase
+       1828 +        .from('companies')
+       1829 +        .select('business_hours, subscription_tier')
+       1830 +        .eq('id', company?.id)
+       1831 +        .single();
+       1832 +  
+       1833 +      setBusinessHours(data?.business_hours);
+       1834 +    }
+       1835 +  
+       1836 +    async function fetchTeamMembers() {
+       1837 +      const { data } = await supabase
+       1838 +        .from('user_profiles')
+       1839 +        .select(`
+       1840 +          *,
+       1841 +          agent_load(active_chats, max_cases, expertise_tags, is_available)
+       1842 +        `)
+       1843 +        .eq('company_id', company?.id)
+       1844 +        .in('role', ['agent', 'company_owner', 'admin']);
+       1845 +  
+       1846 +      setTeamMembers(data || []);
+       1847 +    }
+       1848 +  
+       1849 +    async function updateBusinessHours(hours: any) {
+       1850 +      await supabase
+       1851 +        .from('companies')
+       1852 +        .update({ business_hours: hours })
+       1853 +        .eq('id', company?.id);
+       1854 +  
+       1855 +      setBusinessHours(hours);
+       1856 +    }
+       1857 +  
+       1858 +    async function updateAgentMaxCases(agentId: string, maxCases: number) {
+       1859 +      await supabase
+       1860 +        .from('agent_load')
+       1861 +        .update({ max_cases: maxCases })
+       1862 +        .eq('agent_id', agentId);
+       1863 +  
+       1864 +      fetchTeamMembers();
+       1865 +    }
+       1866 +  
+       1867 +    async function updateAgentExpertise(agentId: string, tags: string[]) {
+       1868 +      await supabase
+       1869 +        .from('agent_load')
+       1870 +        .update({ expertise_tags: tags })
+       1871 +        .eq('agent_id', agentId);
+       1872 +  
+       1873 +      fetchTeamMembers();
+       1874 +    }
+       1875 +  
+       1876 +    // ... UI implementation
+       1877 +  }
+       1878 +  ```
+       1879 +  
+       1880 +  ---
+       1881 +  
+       1882 +  ### **✅ Phase 3 Complete Checklist**
+       1883 +  
+       1884 +  - [ ] Task 3.1: ticket_templates table created
+       1885 +  - [ ] Task 3.2: Template management hooks created
+       1886 +  - [ ] Task 3.3: Templates page connected to database
+       1887 +  - [ ] Task 3.4: Settings tables enhanced
+       1888 +  - [ ] Task 3.5: Settings page saves to database
+       1889 +  
+       1890 +  **Success Criteria**:
+       1891 +  - ✅ Templates saved to database (not localStorage)
+       1892 +  - ✅ Templates can be created, edited, deleted
+       1893 +  - ✅ Template usage tracked
+       1894 +  - ✅ Business hours saved to database
+       1895 +  - ✅ Agent max cases configurable
+       1896 +  - ✅ Agent expertise tags configurable
+       1897 +  
+       1898 +  ---
+       1899 +  
+       1900 +  ## **PHASE 4: Knowledge Base Implementation**
+       1901 +  ⏱️ **Timeline**: Week 7-8
+       1902 +  🎯 **Goal**: Help center with AI search
+       1903 +  🟡 **Priority**: MEDIUM - Reduces support burden
+       1904 +  
+       1905 +  ### **Task 4.1: Install pgvector Extension**
+       1906 +  **Time**: 15 minutes
+       1907 +  
+       1908 +  ```sql
+       1909 +  -- Migration: 010_enable_pgvector.sql
+       1910 +  
+       1911 +  -- Enable pgvector extension for AI embeddings
+       1912 +  CREATE EXTENSION IF NOT EXISTS vector;
+       1913 +  ```
+       1914 +  
+       1915 +  ---
+       1916 +  
+       1917 +  ### **Task 4.2: Create Knowledge Base Tables**
+       1918 +  **Time**: 1 hour
+       1919 +  
+       1920 +  ```sql
+       1921 +  -- Migration: 011_create_knowledge_base.sql
+       1922 +  
+       1923 +  CREATE TABLE IF NOT EXISTS knowledge_base_themes (
+       1924 +    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+       1925 +    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+       1926 +    name TEXT NOT NULL,
+       1927 +    icon TEXT,
+       1928 +    description TEXT,
+       1929 +    sort_order INTEGER DEFAULT 0,
+       1930 +    created_at TIMESTAMPTZ DEFAULT NOW(),
+       1931 +    updated_at TIMESTAMPTZ DEFAULT NOW()
+       1932 +  );
+       1933 +  
+       1934 +  CREATE INDEX idx_kb_themes_company_id ON knowledge_base_themes(company_id);
+       1935 +  CREATE INDEX idx_kb_themes_sort_order ON knowledge_base_themes(sort_order);
+       1936 +  
+       1937 +  CREATE TABLE IF NOT EXISTS knowledge_base_articles (
+       1938 +    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+       1939 +    theme_id UUID NOT NULL REFERENCES knowledge_base_themes(id) ON DELETE CASCADE,
+       1940 +    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+       1941 +    title TEXT NOT NULL,
+       1942 +    content TEXT NOT NULL,
+       1943 +    excerpt TEXT,
+       1944 +    tags TEXT[] DEFAULT '{}',
+       1945 +    view_count INTEGER DEFAULT 0,
+       1946 +    helpful_count INTEGER DEFAULT 0,
+       1947 +    unhelpful_count INTEGER DEFAULT 0,
+       1948 +    created_by UUID NOT NULL REFERENCES user_profiles(id),
+       1949 +    published BOOLEAN DEFAULT false,
+       1950 +    embedding vector(1536), -- OpenAI embeddings dimension
+       1951 +    created_at TIMESTAMPTZ DEFAULT NOW(),
+       1952 +    updated_at TIMESTAMPTZ DEFAULT NOW()
+       1953 +  );
+       1954 +  
+       1955 +  CREATE INDEX idx_kb_articles_theme_id ON knowledge_base_articles(theme_id);
+       1956 +  CREATE INDEX idx_kb_articles_company_id ON knowledge_base_articles(company_id);
+       1957 +  CREATE INDEX idx_kb_articles_published ON knowledge_base_articles(published);
+       1958 +  CREATE INDEX idx_kb_articles_tags ON knowledge_base_articles USING GIN(tags);
+       1959 +  
+       1960 +  -- Vector similarity search index
+       1961 +  CREATE INDEX ON knowledge_base_articles USING ivfflat (embedding vector_cosine_ops)
+       1962 +    WITH (lists = 100);
+       1963 +  
+       1964 +  -- Enable RLS
+       1965 +  ALTER TABLE knowledge_base_themes ENABLE ROW LEVEL SECURITY;
+       1966 +  ALTER TABLE knowledge_base_articles ENABLE ROW LEVEL SECURITY;
+       1967 +  
+       1968 +  -- RLS Policies
+       1969 +  CREATE POLICY kb_themes_company_policy ON knowledge_base_themes
+       1970 +    FOR ALL
+       1971 +    USING (company_id IN (
+       1972 +      SELECT company_id FROM user_profiles WHERE id = auth.uid()
+       1973 +    ));
+       1974 +  
+       1975 +  CREATE POLICY kb_articles_company_policy ON knowledge_base_articles
+       1976 +    FOR ALL
+       1977 +    USING (company_id IN (
+       1978 +      SELECT company_id FROM user_profiles WHERE id = auth.uid()
+       1979 +    ));
+       1980 +  ```
+       1981 +  
+       1982 +  ---
+       1983 +  
+       1984 +  ### **Task 4.3: Create OpenAI Embedding Function**
+       1985 +  **Time**: 2 hours
+       1986 +  
+       1987 +  ```typescript
+       1988 +  // File: dashboardapp/src/lib/openai-embeddings.ts (NEW)
+       1989 +  
+       1990 +  import OpenAI from 'openai';
+       1991 +  
+       1992 +  const openai = new OpenAI({
+       1993 +    apiKey: process.env.OPENAI_API_KEY,
+       1994 +  });
+       1995 +  
+       1996 +  export async function generateEmbedding(text: string): Promise<number[]> {
+       1997 +    const response = await openai.embeddings.create({
+       1998 +      model: 'text-embedding-3-small',
+       1999 +      input: text,
+       2000 +    });
+       2001 +  
+       2002 +    return response.data[0].embedding;
+       2003 +  }
+       2004 +  
+       2005 +  export async function searchSimilarArticles(
+       2006 +    query: string,
+       2007 +    companyId: string,
+       2008 +    limit: number = 5
+       2009 +  ): Promise<any[]> {
+       2010 +    // Generate embedding for query
+       2011 +    const queryEmbedding = await generateEmbedding(query);
+       2012 +  
+       2013 +    // Search using pgvector
+       2014 +    const { data } = await supabase.rpc('search_articles', {
+       2015 +      query_embedding: queryEmbedding,
+       2016 +      p_company_id: companyId,
+       2017 +      match_threshold: 0.7,
+       2018 +      match_count: limit,
+       2019 +    });
+       2020 +  
+       2021 +    return data || [];
+       2022 +  }
+       2023 +  ```
+       2024 +  
+       2025 +  **Database search function**:
+       2026 +  ```sql
+       2027 +  -- Migration: 012_kb_search_function.sql
+       2028 +  
+       2029 +  CREATE OR REPLACE FUNCTION search_articles(
+       2030 +    query_embedding vector(1536),
+       2031 +    p_company_id UUID,
+       2032 +    match_threshold FLOAT DEFAULT 0.7,
+       2033 +    match_count INT DEFAULT 5
+       2034 +  )
+       2035 +  RETURNS TABLE (
+       2036 +    id UUID,
+       2037 +    title TEXT,
+       2038 +    excerpt TEXT,
+       2039 +    content TEXT,
+       2040 +    similarity FLOAT
+       2041 +  ) AS $$
+       2042 +  BEGIN
+       2043 +    RETURN QUERY
+       2044 +    SELECT
+       2045 +      a.id,
+       2046 +      a.title,
+       2047 +      a.excerpt,
+       2048 +      a.content,
+       2049 +      1 - (a.embedding <=> query_embedding) as similarity
+       2050 +    FROM knowledge_base_articles a
+       2051 +    WHERE
+       2052 +      a.company_id = p_company_id
+       2053 +      AND a.published = true
+       2054 +      AND 1 - (a.embedding <=> query_embedding) > match_threshold
+       2055 +    ORDER BY a.embedding <=> query_embedding
+       2056 +    LIMIT match_count;
+       2057 +  END;
+       2058 +  $$ LANGUAGE plpgsql;
+       2059 +  ```
+       2060 +  
+       2061 +  ---
+       2062 +  
+       2063 +  ### **Task 4.4: Build Knowledge Base Management UI**
+       2064 +  **Time**: 4-6 hours
+       2065 +  
+       2066 +  ```typescript
+       2067 +  // File: dashboardapp/src/hooks/useKnowledgeBase.ts (NEW)
+       2068 +  
+       2069 +  import { useState, useEffect } from 'react';
+       2070 +  import { supabase } from '../lib/supabase';
+       2071 +  import { generateEmbedding } from '../lib/openai-embeddings';
+       2072 +  
+       2073 +  export function useKnowledgeBase(companyId: string) {
+       2074 +    const [themes, setThemes] = useState<any[]>([]);
+       2075 +    const [articles, setArticles] = useState<any[]>([]);
+       2076 +    const [loading, setLoading] = useState(true);
+       2077 +  
+       2078 +    useEffect(() => {
+       2079 +      fetchThemes();
+       2080 +    }, [companyId]);
+       2081 +  
+       2082 +    async function fetchThemes() {
+       2083 +      const { data } = await supabase
+       2084 +        .from('knowledge_base_themes')
+       2085 +        .select('*')
+       2086 +        .eq('company_id', companyId)
+       2087 +        .order('sort_order');
+       2088 +  
+       2089 +      setThemes(data || []);
+       2090 +      setLoading(false);
+       2091 +    }
+       2092 +  
+       2093 +    async function fetchArticles(themeId?: string) {
+       2094 +      let query = supabase
+       2095 +        .from('knowledge_base_articles')
+       2096 +        .select('*')
+       2097 +        .eq('company_id', companyId)
+       2098 +        .eq('published', true);
+       2099 +  
+       2100 +      if (themeId) {
+       2101 +        query = query.eq('theme_id', themeId);
+       2102 +      }
+       2103 +  
+       2104 +      const { data } = await query.order('created_at', { ascending: false });
+       2105 +      setArticles(data || []);
+       2106 +    }
+       2107 +  
+       2108 +    async function createArticle(article: any) {
+       2109 +      const user = supabase.auth.user();
+       2110 +  
+       2111 +      // Generate embedding for AI search
+       2112 +      const embedding = await generateEmbedding(
+       2113 +        `${article.title}\n\n${article.content}`
+       2114 +      );
+       2115 +  
+       2116 +      const { data, error } = await supabase
+       2117 +        .from('knowledge_base_articles')
+       2118 +        .insert({
+       2119 +          ...article,
+       2120 +          company_id: companyId,
+       2121 +          created_by: user?.id,
+       2122 +          embedding,
+       2123 +        })
+       2124 +        .select()
+       2125 +        .single();
+       2126 +  
+       2127 +      if (error) throw error;
+       2128 +  
+       2129 +      return data;
+       2130 +    }
+       2131 +  
+       2132 +    async function updateArticle(id: string, updates: any) {
+       2133 +      // Regenerate embedding if content changed
+       2134 +      if (updates.title || updates.content) {
+       2135 +        const { data: article } = await supabase
+       2136 +          .from('knowledge_base_articles')
+       2137 +          .select('title, content')
+       2138 +          .eq('id', id)
+       2139 +          .single();
+       2140 +  
+       2141 +        updates.embedding = await generateEmbedding(
+       2142 +          `${updates.title || article.title}\n\n${updates.content || article.content}`
+       2143 +        );
+       2144 +      }
+       2145 +  
+       2146 +      const { data, error } = await supabase
+       2147 +        .from('knowledge_base_articles')
+       2148 +        .update(updates)
+       2149 +        .eq('id', id)
+       2150 +        .select()
+       2151 +        .single();
+       2152 +  
+       2153 +      if (error) throw error;
+       2154 +  
+       2155 +      return data;
+       2156 +    }
+       2157 +  
+       2158 +    return {
+       2159 +      themes,
+       2160 +      articles,
+       2161 +      loading,
+       2162 +      fetchThemes,
+       2163 +      fetchArticles,
+       2164 +      createArticle,
+       2165 +      updateArticle,
+       2166 +    };
+       2167 +  }
+       2168 +  ```
+       2169 +  
+       2170 +  ---
+       2171 +  
+       2172 +  ### **Task 4.5: Build Knowledge Base Page**
+       2173 +  **Time**: 4-5 hours
+       2174 +  
+       2175 +  ```typescript
+       2176 +  // File: dashboardapp/src/app/knowledge-base/page.tsx
+       2177 +  
+       2178 +  'use client';
+       2179 +  
+       2180 +  import { useState } from 'react';
+       2181 +  import { useKnowledgeBase } from '../../hooks/useKnowledgeBase';
+       2182 +  import { searchSimilarArticles } from '../../lib/openai-embeddings';
+       2183 +  import { useAuth } from '../../contexts/AuthContext';
+       2184 +  
+       2185 +  export default function KnowledgeBasePage() {
+       2186 +    const { company } = useAuth();
+       2187 +    const { themes, articles, fetchArticles } = useKnowledgeBase(company?.id || '');
+       2188 +    const [selectedTheme, setSelectedTheme] = useState<any>(null);
+       2189 +    const [selectedArticle, setSelectedArticle] = useState<any>(null);
+       2190 +    const [searchQuery, setSearchQuery] = useState('');
+       2191 +    const [searchResults, setSearchResults] = useState<any[]>([]);
+       2192 +    const [isSearching, setIsSearching] = useState(false);
+       2193 +  
+       2194 +    async function handleSearch() {
+       2195 +      if (!searchQuery.trim()) return;
+       2196 +  
+       2197 +      setIsSearching(true);
+       2198 +      const results = await searchSimilarArticles(searchQuery, company?.id || '');
+       2199 +      setSearchResults(results);
+       2200 +      setIsSearching(false);
+       2201 +    }
+       2202 +  
+       2203 +    function handleThemeClick(theme: any) {
+       2204 +      setSelectedTheme(theme);
+       2205 +      setSelectedArticle(null);
+       2206 +      fetchArticles(theme.id);
+       2207 +    }
+       2208 +  
+       2209 +    function handleArticleClick(article: any) {
+       2210 +      setSelectedArticle(article);
+       2211 +  
+       2212 +      // Increment view count
+       2213 +      supabase
+       2214 +        .from('knowledge_base_articles')
+       2215 +        .update({ view_count: article.view_count + 1 })
+       2216 +        .eq('id', article.id);
+       2217 +    }
+       2218 +  
+       2219 +    // ... UI implementation with search, themes, articles
+       2220 +  }
+       2221 +  ```
+       2222 +  
+       2223 +  ---
+       2224 +  
+       2225 +  ### **✅ Phase 4 Complete Checklist**
+       2226 +  
+       2227 +  - [ ] Task 4.1: pgvector extension installed
+       2228 +  - [ ] Task 4.2: Knowledge base tables created
+       2229 +  - [ ] Task 4.3: OpenAI embedding integration working
+       2230 +  - [ ] Task 4.4: KB management hooks created
+       2231 +  - [ ] Task 4.5: KB page with AI search implemented
+       2232 +  
+       2233 +  **Success Criteria**:
+       2234 +  - ✅ Can create themes and articles
+       2235 +  - ✅ AI search returns relevant articles
+       2236 +  - ✅ View counts tracked
+       2237 +  - ✅ Helpful/unhelpful ratings work
+       2238 +  - ✅ Rich text editor for article content
+       2239 +  
+       2240 +  ---
+       2241 +  
+       2242 +  ## **PHASE 5: Remaining Features**
+       2243 +  ⏱️ **Timeline**: Week 9-12
+       2244 +  🎯 **Goal**: Complete all remaining features
+       2245 +  🟢 **Priority**: LOW-MEDIUM - Nice to have
+       2246 +  
+       2247 +  ### **Task 5.1: Team Internal Chat**
+       2248 +  **Time**: 1 week
+       2249 +  
+       2250 +  Create `team_chats`, `team_chat_members`, `team_messages` tables and implement internal messaging system for dashboard users.
+       2251 +  
+       2252 +  ---
+       2253 +  
+       2254 +  ### **Task 5.2: Automation Rules**
+       2255 +  **Time**: 1 week
+       2256 +  
+       2257 +  Create `automation_rules` table and rule engine for auto-assignment, auto-tagging, auto-responses.
+       2258 +  
+       2259 +  ---
+       2260 +  
+       2261 +  ### **Task 5.3: Beey Messaging**
+       2262 +  **Time**: 3-4 days
+       2263 +  
+       2264 +  Complete Beey page to send messages to Flutter consumers, track delivery and read status.
+       2265 +  
+       2266 +  ---
+       2267 +  
+       2268 +  ### **Task 5.4: Admin Chats Overview**
+       2269 +  **Time**: 2-3 days
+       2270 +  
+       2271 +  Connect Admin Chats page to real data with priority filtering and bulk operations.
+       2272 +  
+       2273 +  ---
+       2274 +  
+       2275 +  ### **Task 5.5: Dashboard Home Enhancements**
+       2276 +  **Time**: 2-3 days
+       2277 +  
+       2278 +  Replace remaining mock data with real database queries (team members, recent activity, funnel cards).
+       2279 +  
+       2280 +  ---
+       2281 +  
+       2282 +  ## 🧪 TESTING & VALIDATION
+       2283 +  
+       2284 +  ### **For Each Phase**:
+       2285 +  
+       2286 +  1. **Unit Tests**
+       2287 +     - Test database functions
+       2288 +     - Test API endpoints
+       2289 +     - Test edge cases
+       2290 +  
+       2291 +  2. **Integration Tests**
+       2292 +     - Test full data flow (Shopify → Database → Apps)
+       2293 +     - Test real-time updates
+       2294 +     - Test push notifications
+       2295 +  
+       2296 +  3. **User Acceptance Testing**
+       2297 +     - Test with real Shopify orders
+       2298 +     - Test with real users
+       2299 +     - Collect feedback
+       2300 +  
+       2301 +  4. **Performance Testing**
+       2302 +     - Test with 100+ orders
+       2303 +     - Test with 10+ concurrent users
+       2304 +     - Measure response times
+       2305 +  
+       2306 +  ### **Critical Validation Points**:
+       2307 +  
+       2308 +  - ✅ Shopify order appears in Flutter app within 10 seconds
+       2309 +  - ✅ Push notification received within 5 seconds
+       2310 +  - ✅ Chat messages appear in real-time (< 1 second)
+       2311 +  - ✅ Analytics data accurate within 5% margin
+       2312 +  - ✅ All RLS policies prevent unauthorized access
+       2313 +  - ✅ No sensitive data exposed in logs
+       2314 +  
+       2315 +  ---
+       2316 +  
+       2317 +  ## 🔄 ROLLBACK PROCEDURES
+       2318 +  
+       2319 +  ### **Database Migrations**:
+       2320 +  
+       2321 +  Each migration includes rollback SQL:
+       2322 +  ```sql
+       2323 +  -- Migration UP
+       2324 +  ALTER TABLE chats ADD COLUMN priority TEXT;
+       2325 +  
+       2326 +  -- Migration DOWN (rollback)
+       2327 +  ALTER TABLE chats DROP COLUMN IF EXISTS priority;
+       2328 +  ```
+       2329 +  
+       2330 +  Store all migration files in `migrations/` directory with numbers: `001_migration_name.sql`
+       2331 +  
+       2332 +  ### **Code Deployments**:
+       2333 +  
+       2334 +  ```bash
+       2335 +  # Tag before deployment
+       2336 +  git tag -a phase-1-complete -m "Phase 1: Orders in Flutter"
+       2337 +  git push origin phase-1-complete
+       2338 +  
+       2339 +  # If rollback needed
+       2340 +  git revert <commit-hash>
+       2341 +  git push
+       2342 +  ```
+       2343 +  
+       2344 +  ### **Emergency Rollback**:
+       2345 +  
+       2346 +  1. Restore database from backup
+       2347 +  2. Deploy previous git tag
+       2348 +  3. Clear caches
+       2349 +  4. Notify team
+       2350 +  
+       2351 +  ---
+       2352 +  
+       2353 +  ## 📈 SUCCESS METRICS
+       2354 +  
+       2355 +  ### **Phase 1 (Critical)**:
+       2356 +  - 100% of Shopify orders sync to orders table
+       2357 +  - 95%+ push notification delivery rate
+       2358 +  - < 10 second order appearance in Flutter app
+       2359 +  
+       2360 +  ### **Phase 2 (Analytics)**:
+       2361 +  - Analytics page loads in < 2 seconds
+       2362 +  - Response time accuracy within 5%
+       2363 +  - All team members tracked correctly
+       2364 +  
+       2365 +  ### **Phase 3 (Templates)**:
+       2366 +  - 0 localStorage dependencies
+       2367 +  - Template usage tracked for all sends
+       2368 +  - Settings persist across sessions
+       2369 +  
+       2370 +  ### **Phase 4 (Knowledge Base)**:
+       2371 +  - AI search relevance > 80%
+       2372 +  - < 1 second search response time
+       2373 +  - Article view counts accurate
+       2374 +  
+       2375 +  ---
+       2376 +  
+       2377 +  ## 📞 SUPPORT & TROUBLESHOOTING
+       2378 +  
+       2379 +  ### **Common Issues**:
+       2380 +  
+       2381 +  **Issue**: Orders not syncing from Shopify
+       2382 +  - Check: Webhook events table for errors
+       2383 +  - Check: shopify_stores.is_active = true
+       2384 +  - Check: Access token not expired
+       2385 +  
+       2386 +  **Issue**: Push notifications not received
+       2387 +  - Check: FCM token saved in user_profiles
+       2388 +  - Check: Firebase project credentials
+       2389 +  - Check: Device permissions granted
+       2390 +  
+       2391 +  **Issue**: Analytics showing 0 data
+       2392 +  - Check: analytics_events table has rows
+       2393 +  - Check: Date range includes data
+       2394 +  - Check: RLS policies allow access
+       2395 +  
+       2396 +  **Issue**: Real-time updates not working
+       2397 +  - Check: Supabase realtime enabled
+       2398 +  - Check: RLS policies on tables
+       2399 +  - Check: Network connection stable
+       2400 +  
+       2401 +  ---
+       2402 +  
+       2403 +  ## ✅ FINAL CHECKLIST
+       2404 +  
+       2405 +  ### **Before Going Live**:
+       2406 +  
+       2407 +  - [ ] All database migrations tested on staging
+       2408 +  - [ ] All RLS policies verified
+       2409 +  - [ ] All API keys stored in environment variables
+       2410 +  - [ ] All error handling implemented
+       2411 +  - [ ] All logging configured
+       2412 +  - [ ] Backup procedures documented
+       2413 +  - [ ] Monitoring alerts configured
+       2414 +  - [ ] Load testing completed
+       2415 +  - [ ] Security audit completed
+       2416 +  - [ ] User documentation written
+       2417 +  - [ ] Team trained on new features
+       2418 +  
+       2419 +  ---
+       2420 +  
+       2421 +  **REMEMBER**: One task at a time. Test thoroughly. Document everything. Don't skip steps.
+       2422 +  
+       2423 +  Good luck! 🚀

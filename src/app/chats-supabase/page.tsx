@@ -8,6 +8,7 @@ import {
   PaperAirplaneIcon,
   ArrowLeftIcon,
   ChatBubbleLeftRightIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import { useChats } from '../../hooks/useChats';
 import { useMessages } from '../../hooks/useMessages';
@@ -21,6 +22,7 @@ function ChatsSupabaseContent() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'pending' | 'closed'>('all');
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   // Get user's company ID from profile
   const [companyId, setCompanyId] = useState<string | null>(null);
@@ -90,6 +92,26 @@ function ChatsSupabaseContent() {
     }
   };
 
+  const formatDate = (timestamp: string | null) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const isUrgent = (lastMessageAt: string | null, status: string) => {
+    if (!lastMessageAt || status === 'closed') return false;
+    const date = new Date(lastMessageAt);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+    // Mark as urgent if message is within last 2 hours and chat is open or pending
+    return diffInHours < 2 && (status === 'open' || status === 'pending');
+  };
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedChatId) return;
 
@@ -138,10 +160,6 @@ function ChatsSupabaseContent() {
             {/* Chat List */}
             <div className="w-full lg:w-[420px] flex flex-col h-full min-h-0 border-r border-gray-200">
               <div className="p-4 border-b border-gray-200 bg-gray-50">
-                <h1 className="text-lg font-semibold text-gray-900 mb-4">
-                  Customer Chats
-                </h1>
-
                 {/* Search */}
                 <div className="relative mb-4">
                   <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -154,21 +172,35 @@ function ChatsSupabaseContent() {
                   />
                 </div>
 
-                {/* Status Filters */}
-                <div className="flex gap-2">
-                  {(['all', 'open', 'pending', 'closed'] as const).map((status) => (
-                    <button
-                      key={status}
-                      onClick={() => setFilterStatus(status)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        filterStatus === status
-                          ? 'bg-blue-500 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </button>
-                  ))}
+                {/* Status Filter Dropdown - Full Width */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-between shadow-sm"
+                  >
+                    <span>{filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}</span>
+                    <ChevronDownIcon className="h-4 w-4 ml-2" />
+                  </button>
+                  {showFilterDropdown && (
+                    <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
+                      {(['all', 'open', 'pending', 'closed'] as const).map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => {
+                            setFilterStatus(status);
+                            setShowFilterDropdown(false);
+                          }}
+                          className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
+                            filterStatus === status
+                              ? 'bg-blue-50 text-blue-700 font-medium'
+                              : 'text-gray-700'
+                          }`}
+                        >
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -188,53 +220,68 @@ function ChatsSupabaseContent() {
                     <p>No chats found</p>
                   </div>
                 ) : (
-                  filteredChats.map((chat) => (
-                    <div
-                      key={chat.id}
-                      onClick={() => handleSelectChat(chat.id)}
-                      className={`p-5 border-b border-gray-100 cursor-pointer hover:bg-blue-50 transition-all ${
-                        selectedChatId === chat.id
-                          ? 'bg-blue-50 border-l-4 border-l-blue-500'
-                          : 'bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-700">
-                            {chat.customer?.name
-                              ?.split(' ')
-                              .map((n) => n[0])
-                              .join('') || '?'}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-medium text-gray-900 truncate">
-                              {chat.customer?.name || 'Unknown Customer'}
-                            </h3>
-                            <span className="text-xs text-gray-500">
-                              {formatTime(chat.last_message_at)}
+                  filteredChats.map((chat) => {
+                    const urgent = isUrgent(chat.last_message_at, chat.status);
+                    return (
+                      <div
+                        key={chat.id}
+                        onClick={() => handleSelectChat(chat.id)}
+                        className={`p-5 border-b border-gray-100 cursor-pointer hover:bg-blue-50 transition-all ${
+                          selectedChatId === chat.id
+                            ? 'bg-blue-50 border-l-4 border-l-blue-500'
+                            : 'bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-gray-700">
+                              {chat.customer?.name
+                                ?.split(' ')
+                                .map((n) => n[0])
+                                .join('') || '?'}
                             </span>
                           </div>
-                          <p className="text-xs font-medium text-gray-600 truncate mt-1">
-                            {chat.subject || 'No subject'}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate mt-1">
-                            {chat.last_message || 'No messages yet'}
-                          </p>
-                          <div className="mt-2">
-                            <span
-                              className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
-                                chat.status
-                              )}`}
-                            >
-                              {chat.status}
-                            </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-sm font-medium text-gray-900 truncate">
+                                {chat.customer?.name || 'Unknown Customer'}
+                              </h3>
+                              <span className="text-xs text-gray-500">
+                                {formatTime(chat.last_message_at)}
+                              </span>
+                            </div>
+                            <p className="text-xs font-medium text-gray-600 truncate mt-1">
+                              {chat.subject || 'No subject'}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate mt-1">
+                              {chat.last_message || 'No messages yet'}
+                            </p>
+                            <div className="mt-2 flex items-center gap-2">
+                              {urgent && (
+                                <div className="flex flex-col">
+                                  <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800 font-semibold uppercase">
+                                    Urgent
+                                  </span>
+                                  <span className="text-xs text-gray-500 mt-1">
+                                    {formatDate(chat.last_message_at)}
+                                  </span>
+                                </div>
+                              )}
+                              {!urgent && (
+                                <span
+                                  className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
+                                    chat.status
+                                  )}`}
+                                >
+                                  {chat.status}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -243,9 +290,9 @@ function ChatsSupabaseContent() {
             <div className="w-full lg:flex-1 flex flex-col h-full min-h-0">
               {selectedChat ? (
                 <>
-                  {/* Chat Header */}
-                  <div className="bg-gray-50 p-4 md:p-5 lg:p-6 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
+                  {/* Chat Header - Matching height with left column */}
+                  <div className="bg-gray-50 p-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between h-[52px]">
                       <div className="flex items-center space-x-3">
                         <button
                           onClick={handleBackToList}
@@ -262,12 +309,9 @@ function ChatsSupabaseContent() {
                           </span>
                         </div>
                         <div>
-                          <h2 className="text-lg font-medium text-gray-900">
-                            {selectedChat.customer?.name || 'Unknown'}
+                          <h2 className="text-sm font-medium text-gray-900">
+                            {messages.length} conversation{messages.length !== 1 ? 's' : ''}
                           </h2>
-                          <p className="text-sm text-gray-500">
-                            {selectedChat.subject || 'No subject'}
-                          </p>
                         </div>
                       </div>
                       <select

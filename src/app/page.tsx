@@ -539,7 +539,7 @@ export default function Dashboard() {
           <div>
             <div className="p-2.5 border-b border-gray-100 hover:bg-gray-50 cursor-pointer">
               <div className="flex items-start space-x-2">
-                <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 bg-blue-500"></div>
+                <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{backgroundColor: '#FBBF16'}}></div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-900">New reply from Emily Davis</p>
                   <p className="text-xs text-gray-500 mt-0.5">2 minutes ago</p>
@@ -548,7 +548,7 @@ export default function Dashboard() {
             </div>
             <div className="p-2.5 border-b border-gray-100 hover:bg-gray-50 cursor-pointer">
               <div className="flex items-start space-x-2">
-                <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 bg-blue-500"></div>
+                <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{backgroundColor: '#FBBF16'}}></div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-900">Order #12345 status updated</p>
                   <p className="text-xs text-gray-500 mt-0.5">15 minutes ago</p>
