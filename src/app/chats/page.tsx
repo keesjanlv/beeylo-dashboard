@@ -598,7 +598,7 @@ export default function ChatsPage() {
                           timestamp={formatTime(chat.last_message_at)}
                           status={chat.status}
                           isUrgent={urgent}
-                          isBriefing={chat.isBriefing}
+                          isBriefing={false}
                           sentiment={chat.sentiment}
                           isSelected={selectedChatId === chat.id}
                           onClick={() => handleSelectChat(chat.id)}

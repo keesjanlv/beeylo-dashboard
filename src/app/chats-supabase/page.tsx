@@ -391,7 +391,6 @@ function ChatsSupabaseContent() {
                   ) : (
                     selectedCustomerChats.map((chat) => {
                       const urgent = isUrgent(chat.last_message_at, chat.status);
-                      const isBriefing = isBriefingChat(chat);
 
                       return (
                         <ChatCard
@@ -409,7 +408,7 @@ function ChatsSupabaseContent() {
                           timestamp={formatTime(chat.last_message_at || chat.created_at)}
                           status={chat.status}
                           isUrgent={urgent}
-                          isBriefing={isBriefing}
+                          isBriefing={false}
                           isSelected={selectedChatId === chat.id}
                           onClick={() => handleSelectChat(chat.id)}
                         />

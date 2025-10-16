@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FaceFrownIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { FaceFrownIcon, ExclamationCircleIcon, FaceSmileIcon } from '@heroicons/react/24/outline';
 
 interface ChatCardProps {
   id: string;
@@ -30,15 +30,15 @@ export default function ChatCard({
   sentiment = 'neutral',
   onClick,
 }: ChatCardProps) {
-  // Sentiment emoji mapper
-  const getSentimentEmoji = (sentiment: 'angry' | 'neutral' | 'happy') => {
+  // Sentiment icon mapper - using minimal heroicons
+  const getSentimentIcon = (sentiment: 'angry' | 'neutral' | 'happy') => {
     switch (sentiment) {
       case 'angry':
-        return '😠';
+        return <FaceFrownIcon className="w-4 h-4 text-red-500" />;
       case 'happy':
-        return '😊';
+        return <FaceSmileIcon className="w-4 h-4 text-green-500" />;
       default:
-        return '😐';
+        return <div className="w-4 h-4 rounded-full border-2 border-gray-400" />;
     }
   };
   // Briefing card styling (for new chats that haven't been responded to yet)
@@ -70,17 +70,12 @@ export default function ChatCard({
           <div className="flex-1">
             <div className="flex items-center gap-1.5">
               <h3 className="text-sm font-semibold text-gray-900">{customerName}</h3>
-              <span className="text-base leading-none opacity-40">{getSentimentEmoji(sentiment)}</span>
+              {getSentimentIcon(sentiment)}
             </div>
             <span className="text-xs text-gray-500 capitalize">
               {sentiment === 'angry' ? 'Frustrated' : sentiment === 'happy' ? 'Satisfied' : 'Neutral'}
             </span>
           </div>
-        </div>
-
-        {/* Subject */}
-        <div className="mb-2">
-          <h4 className="text-xs font-medium text-gray-900">{subject}</h4>
         </div>
 
         {/* Message preview */}
@@ -113,7 +108,7 @@ export default function ChatCard({
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5">
                 <h3 className="text-sm font-semibold text-gray-900">{customerName}</h3>
-                <span className="text-base leading-none opacity-40">{getSentimentEmoji(sentiment)}</span>
+                {getSentimentIcon(sentiment)}
               </div>
               {isUrgent && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold rounded bg-red-100 text-red-700 uppercase">
