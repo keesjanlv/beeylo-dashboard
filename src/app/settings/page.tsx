@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
 import {
   Cog6ToothIcon,
   LinkIcon,
@@ -139,54 +138,25 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
-      let imageUrl: string | null = null;
+      const formData = new FormData();
+      formData.append('company_id', company.id);
+      formData.append('name', companyName);
+      formData.append('bio', companyBio);
+      formData.append('industry', companyIndustry);
 
-      // Upload logo to Supabase Storage if provided
       if (companyLogo) {
-        const fileExt = companyLogo.name.split('.').pop();
-        const fileName = `${company.id}-${Date.now()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('company-logos')
-          .upload(filePath, companyLogo, {
-            contentType: companyLogo.type,
-            upsert: true,
-          });
-
-        if (uploadError) {
-          console.error('Error uploading logo:', uploadError);
-          throw new Error('Failed to upload logo');
-        }
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('company-logos')
-          .getPublicUrl(filePath);
-
-        imageUrl = publicUrl;
+        formData.append('logo', companyLogo);
       }
 
-      // Update company in database
-      const updateData: any = {
-        name: companyName,
-        bio: companyBio,
-        industry: companyIndustry,
-        updated_at: new Date().toISOString(),
-      };
+      const response = await fetch('/api/company/profile', {
+        method: 'PUT',
+        body: formData,
+      });
 
-      if (imageUrl) {
-        updateData.image_url = imageUrl;
-      }
+      const data = await response.json();
 
-      const { error: updateError } = await supabase
-        .from('companies')
-        .update(updateData)
-        .eq('id', company.id);
-
-      if (updateError) {
-        console.error('Error updating company:', updateError);
-        throw new Error('Failed to update company');
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save company information');
       }
 
       // Refresh company data in context

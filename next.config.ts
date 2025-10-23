@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export',
-  trailingSlash: true,
+  // Removed 'output: export' to enable server-side rendering for Railway deployment
+  // This allows API routes and secure server-side Supabase access
   images: {
     unoptimized: true
   },
