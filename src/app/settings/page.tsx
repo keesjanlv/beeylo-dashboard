@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSidebar } from '../../contexts/SidebarContext';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Cog6ToothIcon,
   LinkIcon,
@@ -42,23 +43,132 @@ interface User {
 
 export default function SettingsPage() {
   const { position, setPosition } = useSidebar();
-  const [activeTab, setActiveTab] = useState('integrations');
+  const { company, refreshCompany } = useAuth();
+  const [activeTab, setActiveTab] = useState('general');
   const [users, setUsers] = useState<User[]>(usersData);
   const [contentScale, setContentScale] = useState(1.0);
   const [editingUser, setEditingUser] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState('');
+  const [companyBio, setCompanyBio] = useState('');
+  const [companyIndustry, setCompanyIndustry] = useState('Sports Equipment');
+  const [companyLogo, setCompanyLogo] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Load company data when available
+  useEffect(() => {
+    if (company) {
+      setCompanyName(company.name || '');
+      setCompanyBio(company.bio || '');
+      setCompanyIndustry(company.industry || 'Sports Equipment');
+      setLogoPreview(company.image_url || null);
+    }
+  }, [company]);
 
   const tabs = [
+    { id: 'general', name: 'General', icon: Cog6ToothIcon },
     { id: 'integrations', name: 'Integrations', icon: LinkIcon },
     { id: 'automation', name: 'Automation', icon: BoltIcon },
     { id: 'team', name: 'Team', icon: UsersIcon },
     { id: 'layout', name: 'Layout', icon: RectangleGroupIcon },
-    { id: 'general', name: 'General', icon: Cog6ToothIcon },
   ];
 
   const handleScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const scale = parseFloat(e.target.value);
     setContentScale(scale);
     document.documentElement.style.fontSize = `${scale * 100}%`;
+  };
+
+  const industryOptions = [
+    'E-commerce',
+    'Retail',
+    'Sports Equipment',
+    'Fashion & Apparel',
+    'Electronics',
+    'Home & Garden',
+    'Health & Beauty',
+    'Food & Beverage',
+    'Automotive',
+    'Books & Media',
+    'Toys & Games',
+    'Jewelry & Accessories',
+    'Pet Supplies',
+    'Arts & Crafts',
+    'Office Supplies',
+    'Furniture',
+    'Baby & Kids',
+    'Fitness & Outdoor',
+    'Technology',
+    'Travel & Hospitality',
+    'Professional Services',
+    'Other'
+  ];
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (PNG, JPG, or JPEG)');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image size should be less than 2MB');
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setLogoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    setCompanyLogo(file);
+  };
+
+  const handleSaveCompanyInfo = async () => {
+    if (!company?.id) {
+      alert('Company information not available');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append('company_id', company.id);
+      formData.append('name', companyName);
+      formData.append('bio', companyBio);
+      formData.append('industry', companyIndustry);
+
+      if (companyLogo) {
+        formData.append('logo', companyLogo);
+      }
+
+      const response = await fetch('/api/company/profile', {
+        method: 'PUT',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save company information');
+      }
+
+      // Refresh company data in context
+      await refreshCompany();
+
+      alert('Company information saved successfully!');
+    } catch (error) {
+      console.error('Failed to save company info:', error);
+      alert(error instanceof Error ? error.message : 'Failed to save company information. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const integrations = [
@@ -415,22 +525,88 @@ export default function SettingsPage() {
       <div className="space-y-6">
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Company Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
+            {/* Company Logo */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Company Logo</label>
+              <div className="flex items-center space-x-4">
+                <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50">
+                  {logoPreview ? (
+                    <img src={logoPreview} alt="Company logo preview" className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-xs text-gray-400 text-center px-2">No logo</span>
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="file"
+                    id="logo-upload"
+                    accept="image/png,image/jpeg,image/jpg"
+                    onChange={handleLogoChange}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="logo-upload"
+                    className="cursor-pointer inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Upload Logo
+                  </label>
+                  <p className="text-xs text-gray-500 mt-2">PNG or JPG, max 200x200px, under 2MB</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Company Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
               <input
                 type="text"
-                defaultValue="SportZone Equipment"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
+
+            {/* Company Bio */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Company Bio</label>
+              <textarea
+                value={companyBio}
+                onChange={(e) => setCompanyBio(e.target.value)}
+                placeholder="Tell your customers about your company..."
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+              <p className="text-xs text-gray-500 mt-1">This will be shown to customers in the Beeylo app</p>
+            </div>
+
+            {/* Industry */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option>Sports Equipment</option>
-                <option>Retail</option>
-                <option>E-commerce</option>
+              <select
+                value={companyIndustry}
+                onChange={(e) => setCompanyIndustry(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {industryOptions.map((industry) => (
+                  <option key={industry} value={industry}>{industry}</option>
+                ))}
               </select>
+            </div>
+
+            {/* Save Button */}
+            <div className="pt-4">
+              <button
+                onClick={handleSaveCompanyInfo}
+                disabled={saving}
+                className={`px-6 py-2 rounded-lg text-sm font-medium ${
+                  saving
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                {saving ? 'Saving...' : 'Save Company Information'}
+              </button>
             </div>
           </div>
         </div>
