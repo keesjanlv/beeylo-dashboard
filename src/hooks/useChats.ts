@@ -24,6 +24,15 @@ export function useChats(companyId?: string) {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    console.log('[useChats] Effect triggered, companyId:', companyId);
+
+    // Don't fetch if companyId is undefined or null
+    if (!companyId) {
+      console.log('[useChats] No companyId provided, skipping fetch');
+      setLoading(false);
+      return;
+    }
+
     // Initial fetch
     fetchChats();
 
@@ -39,6 +48,7 @@ export function useChats(companyId?: string) {
           filter: companyId ? `company_id=eq.${companyId}` : undefined,
         },
         () => {
+          console.log('[useChats] Real-time update received, refetching chats');
           // Refetch chats when changes occur
           fetchChats();
         }
@@ -46,12 +56,14 @@ export function useChats(companyId?: string) {
       .subscribe();
 
     return () => {
+      console.log('[useChats] Cleaning up subscription');
       supabase.removeChannel(channel);
     };
   }, [companyId]);
 
   async function fetchChats() {
     try {
+      console.log('[useChats] Starting fetchChats, companyId:', companyId);
       setLoading(true);
 
       // Fetch chats first
@@ -63,13 +75,20 @@ export function useChats(companyId?: string) {
 
       if (companyId) {
         chatsQuery = chatsQuery.eq('company_id', companyId);
+        console.log('[useChats] Filtering by company_id:', companyId);
       }
 
       const { data: chatsData, error: chatsError } = await chatsQuery;
 
-      if (chatsError) throw chatsError;
+      if (chatsError) {
+        console.error('[useChats] Error fetching chats:', chatsError);
+        throw chatsError;
+      }
+
+      console.log('[useChats] Fetched chats:', chatsData?.length || 0, 'chats');
 
       if (!chatsData || chatsData.length === 0) {
+        console.log('[useChats] No chats found');
         setChats([]);
         setError(null);
         return;
@@ -80,17 +99,31 @@ export function useChats(companyId?: string) {
       const agentIds = [...new Set(chatsData.map(c => c.agent_id).filter(Boolean))];
       const companyIds = [...new Set(chatsData.map(c => c.company_id))];
 
+      console.log('[useChats] Fetching profiles for customers:', customerIds.length, 'agents:', agentIds.length);
+
       // Fetch user profiles
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('user_profiles')
         .select('id, name, avatar_url')
         .in('id', [...customerIds, ...agentIds]);
 
+      if (profilesError) {
+        console.error('[useChats] Error fetching profiles:', profilesError);
+      } else {
+        console.log('[useChats] Fetched profiles:', profiles?.length || 0);
+      }
+
       // Fetch companies
-      const { data: companies } = await supabase
+      const { data: companies, error: companiesError } = await supabase
         .from('companies')
         .select('id, name, image_url')
         .in('id', companyIds);
+
+      if (companiesError) {
+        console.error('[useChats] Error fetching companies:', companiesError);
+      } else {
+        console.log('[useChats] Fetched companies:', companies?.length || 0);
+      }
 
       // Create lookup maps
       const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
@@ -104,12 +137,14 @@ export function useChats(companyId?: string) {
         company: companiesMap.get(chat.company_id) || null,
       }));
 
+      console.log('[useChats] Successfully loaded', chatsWithProfiles.length, 'chats with profiles');
       setChats(chatsWithProfiles);
       setError(null);
     } catch (err) {
-      console.error('Error fetching chats:', err);
+      console.error('[useChats] Error in fetchChats:', err);
       setError(err as Error);
     } finally {
+      console.log('[useChats] fetchChats complete, loading=false');
       setLoading(false);
     }
   }
