@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimit, getRateLimitHeaders } from '@/middleware/rateLimiter';
+
+// Rate limiter configuration
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 100, // 100 requests per 15 minutes per IP
+  message: 'Too many requests from this IP, please try again later.'
+});
 
 // Server-side Supabase client with service role key
 function getSupabaseAdmin() {
@@ -19,6 +27,12 @@ function getSupabaseAdmin() {
 }
 
 export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResponse = await limiter(request);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get('company_id');
@@ -48,6 +62,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResponse = await limiter(request);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     const supabase = getSupabaseAdmin();
     const formData = await request.formData();
