@@ -8,11 +8,12 @@ export function middleware(request: NextRequest) {
   // Get origin from request
   const origin = request.headers.get('origin');
 
-  // Define allowed origins
+  // Define allowed origins - PRODUCTION READY
   const allowedOrigins = [
-    'https://app.beeylo.com',
-    'http://localhost:3000',
-    'http://localhost:3001',
+    'https://app.beeylo.com',           // Production dashboard
+    'http://localhost:3000',             // Local development
+    'http://localhost:3001',             // Local development (alternate)
+    'https://xcuvffwuyrdmufvgzczs.supabase.co', // Supabase Realtime
   ];
 
   // Check if origin is allowed
