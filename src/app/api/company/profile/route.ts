@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { rateLimit, getRateLimitHeaders } from '@/middleware/rateLimiter';
+import { rateLimit } from '@/middleware/rateLimiter';
 
-// Rate limiter configuration
+// Global rate limiter - Very lenient to allow high-speed agent work
+// Multiple agents can work from same office IP without issues
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 100, // 100 requests per 15 minutes per IP
-  message: 'Too many requests from this IP, please try again later.'
+  maxRequests: 1000, // 1000 requests per 15 minutes per IP
+  message: 'Too many requests. Please slow down or contact support if you need higher limits.'
 });
 
 // Server-side Supabase client with service role key

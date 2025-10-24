@@ -1,96 +1,190 @@
 import { NextRequest, NextResponse } from 'next/server';
+import IORedis from 'ioredis';
 
-// Simple in-memory rate limiter
-// For production, consider using Redis for distributed rate limiting
+// Redis connection (lazy initialization)
+let redisClient: IORedis | null = null;
 
-interface RateLimitStore {
-  [key: string]: {
-    count: number;
-    resetTime: number;
-  };
-}
+function getRedisClient() {
+  if (!redisClient) {
+    const redisUrl = process.env.REDIS_URL;
 
-const store: RateLimitStore = {};
-
-// Clean up old entries every hour
-setInterval(() => {
-  const now = Date.now();
-  Object.keys(store).forEach(key => {
-    if (store[key].resetTime < now) {
-      delete store[key];
+    if (!redisUrl) {
+      console.warn('REDIS_URL not configured, rate limiting disabled');
+      return null;
     }
-  });
-}, 60 * 60 * 1000);
+
+    redisClient = new IORedis(redisUrl, {
+      maxRetriesPerRequest: 3,
+      retryStrategy: (times) => {
+        if (times > 3) return null; // Stop retrying after 3 attempts
+        return Math.min(times * 200, 2000); // Wait 200ms, 400ms, 600ms
+      },
+      enableReadyCheck: true,
+      lazyConnect: true,
+    });
+
+    redisClient.on('error', (err) => {
+      console.error('Redis rate limiter error:', err);
+    });
+
+    // Connect to Redis
+    redisClient.connect().catch((err) => {
+      console.error('Failed to connect to Redis:', err);
+    });
+  }
+
+  return redisClient;
+}
 
 export interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
   maxRequests: number; // Max requests per window
   message?: string;
+  skipFailedRequests?: boolean; // Don't count failed requests
 }
 
+/**
+ * Redis-based rate limiter
+ *
+ * Limits are designed to prevent abuse while allowing high-speed agent work:
+ * - Multiple agents can work from same IP
+ * - Fast-paced conversations with multiple customers
+ * - Quick tab switching and data lookups
+ *
+ * Default: 1000 requests per 15 minutes (67 req/min)
+ * This allows ~1 request per second sustained, with bursts up to 1000
+ */
 export function rateLimit(config: RateLimitConfig) {
-  const { windowMs, maxRequests, message = 'Too many requests, please try again later.' } = config;
+  const {
+    windowMs,
+    maxRequests,
+    message = 'Too many requests, please slow down.',
+    skipFailedRequests = true
+  } = config;
 
   return async (request: NextRequest): Promise<NextResponse | null> => {
-    // Get client identifier (IP address or user ID from token)
-    const identifier = request.headers.get('x-forwarded-for') ||
-                      request.headers.get('x-real-ip') ||
-                      'unknown';
+    const redis = getRedisClient();
 
-    const now = Date.now();
-    const key = `${identifier}`;
-
-    // Initialize or get current rate limit data
-    if (!store[key] || store[key].resetTime < now) {
-      store[key] = {
-        count: 1,
-        resetTime: now + windowMs,
-      };
-      return null; // Allow request
+    // If Redis is not available, allow the request (fail open)
+    if (!redis || redis.status !== 'ready') {
+      console.warn('Rate limiting bypassed: Redis not available');
+      return null;
     }
 
-    // Increment request count
-    store[key].count++;
+    try {
+      // Get client identifier (IP address)
+      const identifier =
+        request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+        request.headers.get('x-real-ip') ||
+        'unknown';
 
-    // Check if limit exceeded
-    if (store[key].count > maxRequests) {
-      const retryAfter = Math.ceil((store[key].resetTime - now) / 1000);
+      const now = Date.now();
+      const windowStart = now - windowMs;
+      const key = `ratelimit:${identifier}`;
 
-      return NextResponse.json(
-        {
-          error: message,
-          retryAfter: `${retryAfter} seconds`
-        },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': retryAfter.toString(),
-            'X-RateLimit-Limit': maxRequests.toString(),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': new Date(store[key].resetTime).toISOString(),
+      // Use Redis sorted set to track requests in time window
+      // Score = timestamp, Value = unique request ID
+      const requestId = `${now}:${Math.random()}`;
+
+      // Start a Redis pipeline for atomic operations
+      const pipeline = redis.pipeline();
+
+      // 1. Remove old requests outside the window
+      pipeline.zremrangebyscore(key, 0, windowStart);
+
+      // 2. Add current request
+      pipeline.zadd(key, now, requestId);
+
+      // 3. Count requests in window
+      pipeline.zcard(key);
+
+      // 4. Set expiry on key (cleanup)
+      pipeline.expire(key, Math.ceil(windowMs / 1000));
+
+      const results = await pipeline.exec();
+
+      if (!results) {
+        // Pipeline failed, allow request
+        return null;
+      }
+
+      // Get count from results (index 2 = zcard result)
+      const countResult = results[2];
+      const count = (countResult && countResult[1]) as number || 0;
+
+      // Check if limit exceeded
+      if (count > maxRequests) {
+        const oldestRequest = await redis.zrange(key, 0, 0, 'WITHSCORES');
+        const oldestTimestamp = oldestRequest[1] ? parseInt(oldestRequest[1]) : now;
+        const resetTime = oldestTimestamp + windowMs;
+        const retryAfter = Math.ceil((resetTime - now) / 1000);
+
+        return NextResponse.json(
+          {
+            error: message,
+            retryAfter: `${retryAfter} seconds`,
+            limit: maxRequests,
+            windowSeconds: Math.ceil(windowMs / 1000)
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': retryAfter.toString(),
+              'X-RateLimit-Limit': maxRequests.toString(),
+              'X-RateLimit-Remaining': '0',
+              'X-RateLimit-Reset': new Date(resetTime).toISOString(),
+            }
           }
-        }
-      );
-    }
+        );
+      }
 
-    // Add rate limit headers
-    return null; // Allow request, but we'll add headers in the actual route
+      // Request allowed
+      return null;
+
+    } catch (error) {
+      // On error, fail open (allow request) but log the error
+      console.error('Rate limit check failed:', error);
+      return null;
+    }
   };
 }
 
-export function getRateLimitHeaders(identifier: string, config: RateLimitConfig) {
-  const data = store[identifier];
-  if (!data) {
-    return {
-      'X-RateLimit-Limit': config.maxRequests.toString(),
-      'X-RateLimit-Remaining': config.maxRequests.toString(),
-    };
+/**
+ * Get rate limit info for an identifier (for monitoring/debugging)
+ */
+export async function getRateLimitInfo(identifier: string, windowMs: number) {
+  const redis = getRedisClient();
+
+  if (!redis) {
+    return { available: false };
   }
 
-  const remaining = Math.max(0, config.maxRequests - data.count);
-  return {
-    'X-RateLimit-Limit': config.maxRequests.toString(),
-    'X-RateLimit-Remaining': remaining.toString(),
-    'X-RateLimit-Reset': new Date(data.resetTime).toISOString(),
-  };
+  try {
+    const key = `ratelimit:${identifier}`;
+    const now = Date.now();
+    const windowStart = now - windowMs;
+
+    const count = await redis.zcount(key, windowStart, now);
+    const ttl = await redis.ttl(key);
+
+    return {
+      available: true,
+      count,
+      ttl,
+      windowMs
+    };
+  } catch (error) {
+    console.error('Failed to get rate limit info:', error);
+    return { available: false, error: String(error) };
+  }
+}
+
+/**
+ * Graceful shutdown - close Redis connection
+ */
+export async function closeRateLimiter() {
+  if (redisClient) {
+    await redisClient.quit();
+    redisClient = null;
+  }
 }

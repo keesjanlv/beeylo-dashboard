@@ -19,6 +19,7 @@
     "@sentry/nextjs": "^10.22.0",
     "@supabase/supabase-js": "^2.75.0",
     "express-rate-limit": "^8.1.0",
+    "ioredis": "^5.8.2",
     "lucide-react": "^0.544.0",
     "next": "15.5.4",
     "react": "19.1.0",
