@@ -13,12 +13,12 @@ export function getSupabaseClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    // During server-side build, return null to avoid errors
-    if (typeof window === 'undefined') {
-      return null as any;
+    // Return a dummy client for build time
+    if (typeof window === 'undefined' && process.env.NODE_ENV === 'production') {
+      throw new Error('Supabase URL and Anon Key must be provided');
     }
-    // On client side, throw an error to catch configuration issues
-    throw new Error('Supabase URL and Anon Key must be provided in environment variables');
+    // During build, return a mock that won't be used
+    return null as any;
   }
 
   supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -40,14 +40,6 @@ export function getSupabaseClient() {
 export const supabase = new Proxy({} as SupabaseClient<Database>, {
   get(target, prop) {
     const client = getSupabaseClient();
-    if (!client) {
-      // Return a function that throws an error if accessed client-side without env vars
-      if (typeof window !== 'undefined') {
-        throw new Error('Supabase client not initialized. Check your environment variables.');
-      }
-      // During SSR/build, return undefined
-      return undefined;
-    }
     return client[prop as keyof SupabaseClient<Database>];
   }
 });
