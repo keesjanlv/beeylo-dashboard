@@ -1,53 +1,37 @@
 // Supabase client for Next.js
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
-let supabaseInstance: SupabaseClient<Database> | null = null;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-export function getSupabaseClient() {
-  if (supabaseInstance) {
-    return supabaseInstance;
-  }
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('[Supabase] Missing environment variables:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseAnonKey,
+  });
+}
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // During server-side build, return null to avoid errors
-    if (typeof window === 'undefined') {
-      return null as any;
-    }
-    // On client side, throw an error to catch configuration issues
-    throw new Error('Supabase URL and Anon Key must be provided in environment variables');
-  }
-
-  supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+// Create a single supabase client for interacting with your database
+export const supabase = createClient<Database>(
+  supabaseUrl || '',
+  supabaseAnonKey || '',
+  {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
     },
     realtime: {
       params: {
         eventsPerSecond: 10,
       },
     },
-  });
-
-  return supabaseInstance;
-}
-
-// Export a getter for backwards compatibility
-export const supabase = new Proxy({} as SupabaseClient<Database>, {
-  get(target, prop) {
-    const client = getSupabaseClient();
-    if (!client) {
-      // Return a function that throws an error if accessed client-side without env vars
-      if (typeof window !== 'undefined') {
-        throw new Error('Supabase client not initialized. Check your environment variables.');
-      }
-      // During SSR/build, return undefined
-      return undefined;
-    }
-    return client[prop as keyof SupabaseClient<Database>];
   }
-});
+);
+
+// For backward compatibility
+export function getSupabaseClient() {
+  return supabase;
+}
