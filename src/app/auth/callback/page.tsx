@@ -15,11 +15,14 @@ function AuthCallbackContent() {
 
   async function handleAuthCallback() {
     try {
+      console.log('[Auth Callback] Starting authentication callback');
+
       // Check for error in URL params
       const errorParam = searchParams.get('error');
       const errorDescription = searchParams.get('error_description');
 
       if (errorParam) {
+        console.error('[Auth Callback] Error in URL params:', errorParam, errorDescription);
         throw new Error(errorDescription || errorParam);
       }
 
@@ -27,23 +30,46 @@ function AuthCallbackContent() {
       const code = searchParams.get('code');
 
       if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) throw exchangeError;
+        console.log('[Auth Callback] Exchanging code for session');
+
+        // Clear any existing session before exchanging code
+        await supabase.auth.signOut({ scope: 'local' });
+
+        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+        if (exchangeError) {
+          console.error('[Auth Callback] Exchange error:', exchangeError);
+          throw exchangeError;
+        }
+
+        console.log('[Auth Callback] Successfully exchanged code for session');
       }
 
-      // Get the current session
+      // Get the current session with a small delay to ensure it's set
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        console.error('[Auth Callback] Session error:', sessionError);
+        throw sessionError;
+      }
 
       if (!session) {
+        console.error('[Auth Callback] No session found after exchange');
         throw new Error('No session found after authentication');
       }
+
+      console.log('[Auth Callback] Authentication successful, redirecting to dashboard');
 
       // Successfully authenticated, redirect to dashboard
       router.push('/');
     } catch (err) {
-      console.error('Auth callback error:', err);
+      console.error('[Auth Callback] Fatal error:', err);
+
+      // Clear any bad session state
+      await supabase.auth.signOut({ scope: 'local' });
+
       setError(err instanceof Error ? err.message : 'Authentication failed');
     }
   }

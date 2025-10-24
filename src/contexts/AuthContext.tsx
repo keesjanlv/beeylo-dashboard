@@ -72,20 +72,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchCompanyData(session.user.id);
+    let mounted = true;
+
+    // Add a timeout to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+      if (mounted) {
+        console.warn('[AuthContext] Loading timeout - forcing loading to false');
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    }, 10000); // 10 second timeout
+
+    // Get initial session
+    supabase.auth.getSession()
+      .then(async ({ data: { session }, error }) => {
+        if (!mounted) return;
+
+        if (error) {
+          console.error('[AuthContext] Error getting session:', error);
+          // Clear bad session state
+          await supabase.auth.signOut({ scope: 'local' });
+          setUser(null);
+          setCompany(null);
+          setLoading(false);
+          clearTimeout(loadingTimeout);
+          return;
+        }
+
+        console.log('[AuthContext] Initial session loaded:', session ? 'authenticated' : 'not authenticated');
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          await fetchCompanyData(session.user.id);
+        }
+
+        setLoading(false);
+        clearTimeout(loadingTimeout);
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        console.error('[AuthContext] Unexpected error in getSession:', err);
+        setLoading(false);
+        clearTimeout(loadingTimeout);
+      });
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
+      console.log('[AuthContext] Auth state changed:', event, session ? 'authenticated' : 'not authenticated');
+
       setUser(session?.user ?? null);
+
       if (session?.user) {
         await fetchCompanyData(session.user.id);
       } else {
@@ -93,7 +132,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      clearTimeout(loadingTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {

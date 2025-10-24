@@ -17,6 +17,7 @@ import { useChats } from '../../hooks/useChats';
 import { useMessages } from '../../hooks/useMessages';
 import { useChatActions } from '../../hooks/useChatActions';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 function ChatsSupabaseContent() {
   const router = useRouter();
@@ -32,20 +33,37 @@ function ChatsSupabaseContent() {
 
   // Get user's company ID from profile
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchCompanyId() {
       if (!user) return;
 
-      const { supabase } = await import('../../lib/supabase');
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
+      console.log('[Chats] Fetching company ID for user:', user.id);
 
-      if (data?.company_id) {
-        setCompanyId(data.company_id);
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('company_id')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('[Chats] Error fetching company ID:', error);
+          setLoadingError(`Failed to load company profile: ${error.message}`);
+          return;
+        }
+
+        if (data?.company_id) {
+          console.log('[Chats] Company ID found:', data.company_id);
+          setCompanyId(data.company_id);
+        } else {
+          console.warn('[Chats] No company ID found for user');
+          setLoadingError('No company profile found');
+        }
+      } catch (err) {
+        console.error('[Chats] Unexpected error fetching company ID:', err);
+        setLoadingError('An unexpected error occurred');
       }
     }
 
@@ -203,8 +221,35 @@ function ChatsSupabaseContent() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading authentication...</p>
+        </div>
       </div>
+    );
+  }
+
+  if (loadingError) {
+    return (
+      <FullscreenWrapper>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center max-w-md p-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Chats</h2>
+            <p className="text-gray-600 mb-6">{loadingError}</p>
+            <button
+              onClick={() => router.push('/')}
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold"
+            >
+              Return to Dashboard
+            </button>
+          </div>
+        </div>
+      </FullscreenWrapper>
     );
   }
 

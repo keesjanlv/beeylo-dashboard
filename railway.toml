@@ -1,5 +1,6 @@
 [build]
 builder = "NIXPACKS"
+watchPatterns = ["dashboardapp/**"]
 
 [deploy]
 startCommand = "npm start"
